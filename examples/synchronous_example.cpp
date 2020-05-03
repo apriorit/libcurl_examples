@@ -1,27 +1,29 @@
-#include <stdio.h>
-#include <curl/curl.h>
 #include <memory>
 #include <iostream>
+#include <vector>
 
-class CurlGlobalStateGuard
-{
-public:
-    CurlGlobalStateGuard() { curl_global_init(CURL_GLOBAL_DEFAULT); }
-    ~CurlGlobalStateGuard(){ curl_global_cleanup(); }
-};
+#include "commons.h"
 
 int download_synchronous(void)
 {
-    CURLcode res;
-    CurlGlobalStateGuard handle_curl_state;
-    
-    auto curl_deinit = [](CURL* ptr) {curl_easy_cleanup(ptr); };
-    std::unique_ptr<CURL, decltype(curl_deinit)> curl(curl_easy_init());
-    if (!curl) 
+    std::vector<EasyHandle> handles(3);
+
+    /* init easy stacks */
+    try
     {
-        throw std::runtime_error("Failed creating CURL object");
+        handles[0] = CreateEasyHandle();
+        handles[1] = CreateEasyHandle();
+        handles[2] = CreateEasyHandle();
     }
-    curl_easy_setopt(curl.get(), CURLOPT_URL, "https://example.com/");
+    catch (const std::exception& ex)
+    {
+        std::cerr << ex.what() << std::endl;
+        return -1;
+    }
+    /* set options */
+    curl_easy_setopt(handles[0].get(), CURLOPT_URL, "https://www.example.com/");
+    curl_easy_setopt(handles[1].get(), CURLOPT_URL, "http://localhost/");
+    curl_easy_setopt(handles[2].get(), CURLOPT_URL, "http://google.com/");
 
 #ifdef SKIP_PEER_VERIFICATION
     /*
@@ -34,7 +36,9 @@ int download_synchronous(void)
         * default bundle, then the CURLOPT_CAPATH option might come handy for
         * you.
         */
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt(handles[0].get(), CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt(handles[1].get(), CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt(handles[2].get(), CURLOPT_SSL_VERIFYPEER, 0L);
 #endif
 
 #ifdef SKIP_HOSTNAME_VERIFICATION
@@ -44,16 +48,22 @@ int download_synchronous(void)
         * subjectAltName) fields, libcurl will refuse to connect. You can skip
         * this check, but this will make the connection less secure.
         */
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+    curl_easy_setopt(handles[0].get(), CURLOPT_SSL_VERIFYHOST, 0L);
+    curl_easy_setopt(handles[1].get(), CURLOPT_SSL_VERIFYHOST, 0L);
+    curl_easy_setopt(handles[2].get(), CURLOPT_SSL_VERIFYHOST, 0L);
 #endif
 
-    /* Perform the request, res will get the return code */
-    res = curl_easy_perform(curl.get());
-    /* Check for errors */
-    if (res != CURLE_OK)
+    for (auto& handle : handles)
     {
-        std::cerr << "curl_easy_perform() failed:" <<
-            curl_easy_strerror(res) << std::endl;
+        /* Perform the request, res will get the return code */
+        auto res = curl_easy_perform(handle.get());
+        /* Check for errors */
+        if (res != CURLE_OK)
+        {
+            std::cerr << "curl_easy_perform() failed:" <<
+                curl_easy_strerror(res) << std::endl;
+            return -1;
+        }
     }    
 
     return 0;
