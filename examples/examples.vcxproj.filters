@@ -21,10 +21,10 @@
     <ClCompile Include="synchronous_example.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="asynchonous_example.cpp">
+    <ClCompile Include="multiplexing_example.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="multiplexing_example.cpp">
+    <ClCompile Include="asynchronous_example.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
