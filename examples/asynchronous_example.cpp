@@ -23,7 +23,7 @@ int download_asynchronous(void)
         return -1;
     }
     /* set options */
-    curl_easy_setopt(handles[0].get(), CURLOPT_URL, "https://www.example.com/");
+    curl_easy_setopt(handles[0].get(), CURLOPT_URL, "http://www.example.com/");
     curl_easy_setopt(handles[1].get(), CURLOPT_URL, "http://localhost/");
     curl_easy_setopt(handles[2].get(), CURLOPT_URL, "http://google.com/");
 

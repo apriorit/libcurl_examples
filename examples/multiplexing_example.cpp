@@ -25,7 +25,16 @@ int download_multiplexing(int argc, char** argv)
     try
     {
         multi_handle = CreateMultiHandle();
-        std::for_each(handles.begin(), handles.end(), [](auto& handle){handle = CreateEasyHandle(); });
+        for(auto& handle : handles)
+        {
+            handle = CreateEasyHandle();
+            /* HTTP/2 please */
+            curl_easy_setopt(handle.get(), CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
+#if (CURLPIPE_MULTIPLEX > 0)
+            /* wait for pipe connection to confirm */
+            curl_easy_setopt(handle.get(), CURLOPT_PIPEWAIT, 1L);
+#endif
+        }
     }
     catch (const std::exception& ex)
     {
@@ -33,21 +42,12 @@ int download_multiplexing(int argc, char** argv)
         return -1;
     }
     /* set options */
-    curl_easy_setopt(handles[0].get(), CURLOPT_URL, "https://www.example.com/");
+    curl_easy_setopt(handles[0].get(), CURLOPT_URL, "http://www.example.com/");
     curl_easy_setopt(handles[1].get(), CURLOPT_URL, "http://localhost/");
     curl_easy_setopt(handles[2].get(), CURLOPT_URL, "http://google.com/");
 
-
-    for (auto& handle : handles)
-    {
-        /* HTTP/2 please */
-        curl_easy_setopt(handle.get(), CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
-#if (CURLPIPE_MULTIPLEX > 0)
-        /* wait for pipe connection to confirm */
-        curl_easy_setopt(handle.get(), CURLOPT_PIPEWAIT, 1L);
-#endif
-        curl_multi_add_handle(multi_handle.get(), handle.get());
-    }
+    /* add the individual transfers */
+    std::for_each(handles.begin(), handles.end(), [&multi_handle](auto& handle) {curl_multi_add_handle(multi_handle.get(), handle.get()); });
 
     curl_multi_setopt(multi_handle.get(), CURLMOPT_PIPELINING, CURLPIPE_MULTIPLEX);
 
