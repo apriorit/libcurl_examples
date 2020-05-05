@@ -31,8 +31,7 @@ int download_synchronous_in_threads(void)
 
     std::vector<std::thread> threads(3);
     std::transform(handles.begin(), handles.end(), threads.begin(), [](EasyHandle& handle) {return std::thread([&handle]() {return curl_easy_perform(handle.get()); }); });
-    std::for_each(threads.begin(), threads.end(), [](auto&& thread) {thread.join(); });
-   
+    std::for_each(threads.begin(), threads.end(), [](auto&& thread) {thread.join(); });   
 
     return 0;
 }
