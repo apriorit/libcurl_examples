@@ -49,24 +49,19 @@ void set_ssl(CURL* curl)
 
 namespace
 {
-    size_t copy_to_memory(void* contents, size_t size, size_t nmemb, void* userp)
-    {
-        size_t realsize = size * nmemb;
-        auto buf = *reinterpret_cast<std::vector<char>*>(userp);
-
-
-        memcpy(buf.data(), contents, realsize);
-
-        return realsize;
-    }
+size_t copy_to_memory(void* contents, size_t size, size_t nmemb, void* userp)
+{
+    size_t realsize = size * nmemb;
+    auto buf = *reinterpret_cast<std::vector<char>*>(userp);
+    memcpy(buf.data(), contents, realsize);
+    return realsize;
+}
 }
 
 void to_memory(CURL* curl)
 {
     static std::vector<char> buf(1024 * 1024);
-    /* send all data to this function  */
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, copy_to_memory);
-    /* we pass our 'chunk' struct to the callback function */
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&buf));
 }
 
