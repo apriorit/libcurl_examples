@@ -7,7 +7,7 @@
 
 int download_asynchronous(void)
 {
-    std::vector<EasyHandle> handles(1000);
+    std::vector<EasyHandle> handles(3);
     MultiHandle multi_handle;
 
     /* init easy stacks */
