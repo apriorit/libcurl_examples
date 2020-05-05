@@ -18,11 +18,11 @@
  */
 int download_multiplexing(void)
 {
-    /*std::vector<EasyHandle> handles(3);
+    std::vector<EasyHandle> handles(3);
     MultiHandle multi_handle;
 
     /* init easy stacks */
-    /*try
+    try
     {
         multi_handle = CreateMultiHandle();
         for(auto& handle : handles)
@@ -44,7 +44,7 @@ int download_multiplexing(void)
     /* set options */
     curl_easy_setopt(handles[0].get(), CURLOPT_URL, "https://curl.haxx.se/libcurl/c/https.html");
     curl_easy_setopt(handles[1].get(), CURLOPT_URL, "https://curl.haxx.se/libcurl/c/multi-double.html");
-    curl_easy_setopt(handles[2].get(), CURLOPT_URL, "https://curl.haxx.se/libcurl/c/http2-download.html");*/
+    curl_easy_setopt(handles[2].get(), CURLOPT_URL, "https://curl.haxx.se/libcurl/c/http2-download.html");
     std::for_each(handles.begin(), handles.end(), [](auto& handle) {
         set_ssl(handle.get());
         to_memory(handle.get());
