@@ -16,6 +16,7 @@ MultiHandle CreateMultiHandle();
 int download_synchronous();
 int download_asynchronous();
 int download_multiplexing();
+int download_synchronous_in_threads();
 
 void set_ssl(CURL* curl);
 void to_memory(CURL* curl);

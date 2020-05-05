@@ -105,9 +105,7 @@ void multi_loop(CURLM* multi_handle)
 
         int rc = 0; /* select() return code */
         /* On success the value of maxfd is guaranteed to be >= -1. We call
-           select(maxfd + 1, ...); specially in case of (maxfd == -1) there are
-           no fds ready yet so we call select(0, ...) --or Sleep() on Windows--
-           to sleep 100ms, which is the minimum suggested value in the
+           sleep for 100ms, which is the minimum suggested value in the
            curl_multi_fdset() doc. */
 
         if (maxfd == -1) {

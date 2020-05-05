@@ -6,13 +6,6 @@
 
 #include "utils.h"
 
-#ifndef CURLPIPE_MULTIPLEX
-/* This little trick will just make sure that we don't enable pipelining for
-   libcurls old enough to not have this symbol. It is _not_ defined to zero in
-   a recent libcurl header. */
-#define CURLPIPE_MULTIPLEX 0
-#endif
-
 /*
  * Download many transfers over HTTP/2, using the same connection!
  */
@@ -21,7 +14,7 @@ int download_multiplexing(void)
     std::vector<EasyHandle> handles(3);
     MultiHandle multi_handle;
 
-    /* init easy stacks */
+    /* init easy and multi stacks */
     try
     {
         multi_handle = CreateMultiHandle();
@@ -30,10 +23,8 @@ int download_multiplexing(void)
             handle = CreateEasyHandle();
             /* HTTP/2 please */
             curl_easy_setopt(handle.get(), CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
-#if (CURLPIPE_MULTIPLEX > 0)
             /* wait for pipe connection to confirm */
             curl_easy_setopt(handle.get(), CURLOPT_PIPEWAIT, 1L);
-#endif
         }
     }
     catch (const std::exception& ex)

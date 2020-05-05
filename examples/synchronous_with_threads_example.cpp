@@ -1,20 +1,19 @@
-#include <iostream>
 #include <memory>
+#include <iostream>
 #include <vector>
 #include <algorithm>
+#include <thread>
 
 #include "utils.h"
 
-int download_asynchronous(void)
+int download_synchronous_in_threads(void)
 {
     std::vector<EasyHandle> handles(3);
-    MultiHandle multi_handle;
 
-    /* init easy and multi stacks */
+    /* init easy stacks */
     try
     {
-        multi_handle = CreateMultiHandle();
-        std::for_each(handles.begin(), handles.end(), [](auto& handle){handle = CreateEasyHandle(); });
+        std::for_each(handles.begin(), handles.end(), [](auto& handle) {handle = CreateEasyHandle(); });
     }
     catch (const std::exception& ex)
     {
@@ -30,11 +29,10 @@ int download_asynchronous(void)
         to_memory(handle.get());
     });
 
-    /* add the individual transfers */
-    std::for_each(handles.begin(), handles.end(), [&multi_handle](auto& handle) {curl_multi_add_handle(multi_handle.get(), handle.get()); });
+    std::vector<std::thread> threads(3);
+    std::transform(handles.begin(), handles.end(), threads.begin(), [](EasyHandle& handle) {return std::thread([&handle]() {return curl_easy_perform(handle.get()); }); });
+    std::for_each(threads.begin(), threads.end(), [](auto&& thread) {thread.join(); });
+   
 
-    multi_loop(multi_handle.get());
-
-    std::for_each(handles.begin(), handles.end(), [&multi_handle](auto& handle) {curl_multi_remove_handle(multi_handle.get(), handle.get()); });
     return 0;
 }
