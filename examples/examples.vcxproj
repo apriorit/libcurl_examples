@@ -151,12 +151,13 @@
     <ClCompile Include="examples.cpp" />
     <ClCompile Include="multiplexing_example.cpp" />
     <ClCompile Include="synchronous_example.cpp" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="commons.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

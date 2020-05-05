@@ -1,8 +1,8 @@
 #pragma once
 #include <curl/curl.h>
 #include <memory>
-#include <exception>
 #include <functional>
+#include <stdexcept>
 
 class CurlGlobalStateGuard
 {
@@ -20,3 +20,10 @@ using MultiHandle = std::unique_ptr<CURLM, std::function<void(CURLM*)>>;
 
 EasyHandle CreateEasyHandle();
 MultiHandle CreateMultiHandle();
+
+int download_synchronous();
+int download_asynchronous();
+int download_multiplexing();
+
+void set_ssl(CURL* curl);
+void to_memory(CURL* curl);

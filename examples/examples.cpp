@@ -1,39 +1,19 @@
-﻿#include <iostream>
-#include "commons.h"
-
-static CurlGlobalStateGuard handle_curl_state;
-
-void curl_deinit(CURL* ptr)
-{
-    curl_easy_cleanup(ptr);
-}
-
-void curl_multi_deinit(CURLM* ptr)
-{
-    curl_multi_cleanup(ptr);
-}
-
-EasyHandle CreateEasyHandle()
-{
-    auto curl = EasyHandle(curl_easy_init(), curl_deinit);
-    if (!curl)
-    {
-        throw std::runtime_error("Failed creating CURL easy object");
-    }
-    return curl;
-}
-
-MultiHandle CreateMultiHandle()
-{
-    auto curl = MultiHandle(curl_multi_init(), curl_multi_deinit);
-    if (!curl)
-    {
-        throw std::runtime_error("Failed creating CURL multi object");
-    }
-    return curl;
-}
+﻿#include "utils.h"
+#include <chrono>
+#include <iostream>
 
 int main()
 {
-    std::cout << "Hello World!\n";
+    auto start = std::chrono::system_clock::now();
+    download_synchronous();
+    auto step1_end = std::chrono::system_clock::now();
+    download_asynchronous();
+    auto step2_end = std::chrono::system_clock::now();
+    download_multiplexing();
+    auto end = std::chrono::system_clock::now();
+    auto ratio = std::chrono::duration_cast<std::chrono::system_clock::duration>(std::chrono::seconds(1)).count();
+    auto get_sec = [&ratio](auto start, auto end) {return static_cast<double>((end - start).count()) / ratio; };
+    std::cout << "Synchronous: " << get_sec(start, step1_end) << " s." << std::endl
+        << "Asynchronous: " << get_sec(step1_end, step2_end) << " s." << std::endl
+        << "Multiplexing: " << get_sec(step2_end, end) << " s." << std::endl;
 }
