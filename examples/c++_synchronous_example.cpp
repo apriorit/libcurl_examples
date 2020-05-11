@@ -1,13 +1,13 @@
 #include <memory>
 #include <iostream>
-#include <vector>
+#include <array>
 #include <algorithm>
 
 #include "utils.h"
 
 int download_synchronous(void)
 {
-    std::vector<EasyHandle> handles(3);
+    std::array<EasyHandle, 3> handles;
 
     /* init easy stacks */
     try

@@ -1,6 +1,7 @@
 #include <memory>
 #include <iostream>
 #include <vector>
+#include <array>
 #include <algorithm>
 #include <thread>
 
@@ -8,7 +9,7 @@
 
 int download_synchronous_in_threads(void)
 {
-    std::vector<EasyHandle> handles(3);
+    std::array<EasyHandle, 3> handles;
 
     /* init easy stacks */
     try

@@ -1,6 +1,6 @@
 #include <iostream>
 #include <memory>
-#include <vector>
+#include <array>
 #include <algorithm>
 #include <thread>
 
@@ -11,7 +11,7 @@
  */
 int download_multiplexing(void)
 {
-    std::vector<EasyHandle> handles(3);
+    std::array<EasyHandle, 3> handles;
     MultiHandle multi_handle;
 
     /* init easy and multi stacks */
