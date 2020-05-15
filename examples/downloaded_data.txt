@@ -1,0 +1,2247 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD> <TITLE>libcurl example - https.c</TITLE>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+<link rel="stylesheet" type="text/css" href="https://curl.haxx.se/curl.css">
+<link rel="shortcut icon" href="https://curl.haxx.se/favicon.ico">
+<link rel="icon" href="https://curl.haxx.se/logo/curl-symbol.svg" type="image/svg+xml">
+</HEAD>
+<body bgcolor="#ffffff" text="#000000">
+<div class="main">
+<div class="menu">
+<a href="https://curl.haxx.se/libcurl/c/libcurl.html" class="menuitem" title="Overview">Overview</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-tutorial.html" class="menuitem" title="Tutorial">Tutorial</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-errors.html" class="menuitem" title="Error Codes">Errors</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-env.html" class="menuitem" title="Environment variables ">Environment</a>
+<a href="https://curl.haxx.se/libcurl/c/example.html" class="itemselect">Examples</a>
+<a href="https://curl.haxx.se/libcurl/c/symbols-in-versions.html" class="menuitem" title="In which versions were which symbols introduced">Symbols</a>
+<a href="https://curl.haxx.se/libcurl/c/allfuncs.html" class="menuitem" title="List of all libcurl functions">Index</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-easy.html" class="menuitem" title="Easy interface tutorial">Easy Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-multi.html" class="menuitem" title="Multi Interface tutorial">Multi Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-share.html" class="menuitem" title="Share Interface Tutorial">Share Interface</a>
+</div>
+<div class="contents">
+<div class="where"><a href="https://curl.haxx.se/">curl</a> / <a href="/libcurl/">libcurl</a> / <a href="/libcurl/c/">API</a> / <a href="/libcurl/c/example.html">Examples</a> / <b>https.c</b></div>
+<h1> https.c </h1>
+<div class="relatedbox" style="background-color: rgba(255,255,255,1); opacity: 1;">
+<b>Related:</b>
+<br><a href="https://github.com/curl/curl/issues/new?title=https.c%20example&amp;labels=documentation" target="_new">File a bug about https.c</a>
+<br><a href="https://github.com/curl/curl/blob/master/docs/examples/https.c" target="_new">View https.c in git</a>
+<br><a href="https://github.com/curl/curl/raw/master/docs/examples/https.c">Download https.c raw</a>
+</div>
+<div style="clear: both"/>
+<PRE>
+<I><FONT COLOR="#B22222">/***************************************************************************
+ *                                  _   _ ____  _
+ *  Project                     ___| | | |  _ \| |
+ *                             / __| | | | |_) | |
+ *                            | (__| |_| |  _ &lt;| |___
+ *                             \___|\___/|_| \_\_____|
+ *
+ * Copyright (C) 1998 - 2019, Daniel Stenberg, &lt;daniel@haxx.se&gt;, et al.
+ *
+ * This software is licensed as described in the file COPYING, which
+ * you should have received as part of this distribution. The terms
+ * are also available at https://curl.haxx.se/docs/copyright.html.
+ *
+ * You may opt to use, copy, modify, merge, publish, distribute and/or sell
+ * copies of the Software, and permit persons to whom the Software is
+ * furnished to do so, under the terms of the COPYING file.
+ *
+ * This software is distributed on an &quot;AS IS&quot; basis, WITHOUT WARRANTY OF ANY
+ * KIND, either express or implied.
+ *
+ ***************************************************************************/ </FONT></I>
+<I><FONT COLOR="#B22222">/* &lt;DESC&gt;
+ * Simple HTTPS GET
+ * &lt;/DESC&gt;
+ */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;curl/curl.h&gt;</FONT></B>
+&nbsp;
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B>)
+{
+  CURL *curl;
+  CURLcode res;
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_global_init.html">curl_global_init</a>(CURL_GLOBAL_DEFAULT);
+&nbsp;
+  curl = <a href="https://curl.haxx.se/libcurl/c/curl_easy_init.html">curl_easy_init</a>();
+  <B><FONT COLOR="#A020F0">if</FONT></B>(curl) {
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(curl, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_URL.html">CURLOPT_URL</a>, <B><FONT COLOR="#BC8F8F">&quot;https://example.com/&quot;</FONT></B>);
+&nbsp;
+#<B ><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">SKIP_PEER_VERIFICATION</FONT>
+    <I><FONT COLOR="#B22222">/*
+     * If you want to connect to a site who isn't using a certificate that is
+     * signed by one of the certs in the CA bundle you have, you can skip the
+     * verification of the server's certificate. This makes the connection
+     * A LOT LESS SECURE.
+     *
+     * If you have a CA cert for the server stored someplace else than in the
+     * default bundle, then the <a href="https://curl.haxx.se/libcurl/c/CURLOPT_CAPATH.html">CURLOPT_CAPATH</a> option might come handy for
+     * you.
+     */ </FONT></I>
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(curl, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYPEER.html">CURLOPT_SSL_VERIFYPEER</a>, 0L);
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+&nbsp;
+#<B ><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">SKIP_HOSTNAME_VERIFICATION</FONT>
+    <I><FONT COLOR="#B22222">/*
+     * If the site you're connecting to uses a different host name that what
+     * they have mentioned in their server certificate's commonName (or
+     * subjectAltName) fields, libcurl will refuse to connect. You can skip
+     * this check, but this will make the connection less secure.
+     */ </FONT></I>
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(curl, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYHOST.html">CURLOPT_SSL_VERIFYHOST</a>, 0L);
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+&nbsp;
+    <I><FONT COLOR="#B22222">/* Perform the request, res will get the return code */ </FONT></I>
+    res = <a href="https://curl.haxx.se/libcurl/c/curl_easy_perform.html">curl_easy_perform</a>(curl);
+    <I><FONT COLOR="#B22222">/* Check for errors */ </FONT></I>
+    <B><FONT COLOR="#A020F0">if</FONT></B>(res != CURLE_OK)
+      fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;<a href="https://curl.haxx.se/libcurl/c/curl_easy_perform.html">curl_easy_perform</a>() failed: %s\n&quot;</FONT></B>,
+              <a href="https://curl.haxx.se/libcurl/c/curl_easy_strerror.html">curl_easy_strerror</a>(res));
+&nbsp;
+    <I><FONT COLOR="#B22222">/* always cleanup */ </FONT></I>
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_cleanup.html">curl_easy_cleanup</a>(curl);
+  }
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_global_cleanup.html">curl_global_cleanup</a>();
+&nbsp;
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+}
+</PRE>
+</div>
+</div>
+<script defer src="https://www.fastly-insights.com/insights.js?k=8cb1247c-87c2-4af9-9229-768b1990f90b" type="text/javascript"></script>
+</BODY>
+</HTML>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD> <TITLE>libcurl example - https.c</TITLE>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+<link rel="stylesheet" type="text/css" href="https://curl.haxx.se/curl.css">
+<link rel="shortcut icon" href="https://curl.haxx.se/favicon.ico">
+<link rel="icon" href="https://curl.haxx.se/logo/curl-symbol.svg" type="image/svg+xml">
+</HEAD>
+<body bgcolor="#ffffff" text="#000000">
+<div class="main">
+<div class="menu">
+<a href="https://curl.haxx.se/libcurl/c/libcurl.html" class="menuitem" title="Overview">Overview</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-tutorial.html" class="menuitem" title="Tutorial">Tutorial</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-errors.html" class="menuitem" title="Error Codes">Errors</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-env.html" class="menuitem" title="Environment variables ">Environment</a>
+<a href="https://curl.haxx.se/libcurl/c/example.html" class="itemselect">Examples</a>
+<a href="https://curl.haxx.se/libcurl/c/symbols-in-versions.html" class="menuitem" title="In which versions were which symbols introduced">Symbols</a>
+<a href="https://curl.haxx.se/libcurl/c/allfuncs.html" class="menuitem" title="List of all libcurl functions">Index</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-easy.html" class="menuitem" title="Easy interface tutorial">Easy Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-multi.html" class="menuitem" title="Multi Interface tutorial">Multi Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-share.html" class="menuitem" title="Share Interface Tutorial">Share Interface</a>
+</div>
+<div class="contents">
+<div class="where"><a href="https://curl.haxx.se/">curl</a> / <a href="/libcurl/">libcurl</a> / <a href="/libcurl/c/">API</a> / <a href="/libcurl/c/example.html">Examples</a> / <b>https.c</b></div>
+<h1> https.c </h1>
+<div class="relatedbox" style="background-color: rgba(255,255,255,1); opacity: 1;">
+<b>Related:</b>
+<br><a href="https://github.com/curl/curl/issues/new?title=https.c%20example&amp;labels=documentation" target="_new">File a bug about https.c</a>
+<br><a href="https://github.com/curl/curl/blob/master/docs/examples/https.c" target="_new">View https.c in git</a>
+<br><a href="https://github.com/curl/curl/raw/master/docs/examples/https.c">Download https.c raw</a>
+</div>
+<div style="clear: both"/>
+<PRE>
+<I><FONT COLOR="#B22222">/***************************************************************************
+ *                                  _   _ ____  _
+ *  Project                     ___| | | |  _ \| |
+ *                             / __| | | | |_) | |
+ *                            | (__| |_| |  _ &lt;| |___
+ *                             \___|\___/|_| \_\_____|
+ *
+ * Copyright (C) 1998 - 2019, Daniel Stenberg, &lt;daniel@haxx.se&gt;, et al.
+ *
+ * This software is licensed as described in the file COPYING, which
+ * you should have received as part of this distribution. The terms
+ * are also available at https://curl.haxx.se/docs/copyright.html.
+ *
+ * You may opt to use, copy, modify, merge, publish, distribute and/or sell
+ * copies of the Software, and permit persons to whom the Software is
+ * furnished to do so, under the terms of the COPYING file.
+ *
+ * This software is distributed on an &quot;AS IS&quot; basis, WITHOUT WARRANTY OF ANY
+ * KIND, either express or implied.
+ *
+ ***************************************************************************/ </FONT></I>
+<I><FONT COLOR="#B22222">/* &lt;DESC&gt;
+ * Simple HTTPS GET
+ * &lt;/DESC&gt;
+ */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;curl/curl.h&gt;</FONT></B>
+&nbsp;
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B>)
+{
+  CURL *curl;
+  CURLcode res;
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_global_init.html">curl_global_init</a>(CURL_GLOBAL_DEFAULT);
+&nbsp;
+  curl = <a href="https://curl.haxx.se/libcurl/c/curl_easy_init.html">curl_easy_init</a>();
+  <B><FONT COLOR="#A020F0">if</FONT></B>(curl) {
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(curl, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_URL.html">CURLOPT_URL</a>, <B><FONT COLOR="#BC8F8F">&quot;https://example.com/&quot;</FONT></B>);
+&nbsp;
+#<B ><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">SKIP_PEER_VERIFICATION</FONT>
+    <I><FONT COLOR="#B22222">/*
+     * If you want to connect to a site who isn't using a certificate that is
+     * signed by one of the certs in the CA bundle you have, you can skip the
+     * verification of the server's certificate. This makes the connection
+     * A LOT LESS SECURE.
+     *
+     * If you have a CA cert for the server stored someplace else than in the
+     * default bundle, then the <a href="https://curl.haxx.se/libcurl/c/CURLOPT_CAPATH.html">CURLOPT_CAPATH</a> option might come handy for
+     * you.
+     */ </FONT></I>
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(curl, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYPEER.html">CURLOPT_SSL_VERIFYPEER</a>, 0L);
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+&nbsp;
+#<B ><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">SKIP_HOSTNAME_VERIFICATION</FONT>
+    <I><FONT COLOR="#B22222">/*
+     * If the site you're connecting to uses a different host name that what
+     * they have mentioned in their server certificate's commonName (or
+     * subjectAltName) fields, libcurl will refuse to connect. You can skip
+     * this check, but this will make the connection less secure.
+     */ </FONT></I>
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(curl, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYHOST.html">CURLOPT_SSL_VERIFYHOST</a>, 0L);
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+&nbsp;
+    <I><FONT COLOR="#B22222">/* Perform the request, res will get the return code */ </FONT></I>
+    res = <a href="https://curl.haxx.se/libcurl/c/curl_easy_perform.html">curl_easy_perform</a>(curl);
+    <I><FONT COLOR="#B22222">/* Check for errors */ </FONT></I>
+    <B><FONT COLOR="#A020F0">if</FONT></B>(res != CURLE_OK)
+      fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;<a href="https://curl.haxx.se/libcurl/c/curl_easy_perform.html">curl_easy_perform</a>() failed: %s\n&quot;</FONT></B>,
+              <a href="https://curl.haxx.se/libcurl/c/curl_easy_strerror.html">curl_easy_strerror</a>(res));
+&nbsp;
+    <I><FONT COLOR="#B22222">/* always cleanup */ </FONT></I>
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_cleanup.html">curl_easy_cleanup</a>(curl);
+  }
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_global_cleanup.html">curl_global_cleanup</a>();
+&nbsp;
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+}
+</PRE>
+</div>
+</div>
+<script defer src="https://www.fastly-insights.com/insights.js?k=8cb1247c-87c2-4af9-9229-768b1990f90b" type="text/javascript"></script>
+</BODY>
+</HTML>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD> <TITLE>libcurl example - https.c</TITLE>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+<link rel="stylesheet" type="text/css" href="https://curl.haxx.se/curl.css">
+<link rel="shortcut icon" href="https://curl.haxx.se/favicon.ico">
+<link rel="icon" href="https://curl.haxx.se/logo/curl-symbol.svg" type="image/svg+xml">
+</HEAD>
+<body bgcolor="#ffffff" text="#000000">
+<div class="main">
+<div class="menu">
+<a href="https://curl.haxx.se/libcurl/c/libcurl.html" class="menuitem" title="Overview">Overview</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-tutorial.html" class="menuitem" title="Tutorial">Tutorial</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-errors.html" class="menuitem" title="Error Codes">Errors</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-env.html" class="menuitem" title="Environment variables ">Environment</a>
+<a href="https://curl.haxx.se/libcurl/c/example.html" class="itemselect">Examples</a>
+<a href="https://curl.haxx.se/libcurl/c/symbols-in-versions.html" class="menuitem" title="In which versions were which symbols introduced">Symbols</a>
+<a href="https://curl.haxx.se/libcurl/c/allfuncs.html" class="menuitem" title="List of all libcurl functions">Index</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-easy.html" class="menuitem" title="Easy interface tutorial">Easy Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-multi.html" class="menuitem" title="Multi Interface tutorial">Multi Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-share.html" class="menuitem" title="Share Interface Tutorial">Share Interface</a>
+</div>
+<div class="contents">
+<div class="where"><a href="https://curl.haxx.se/">curl</a> / <a href="/libcurl/">libcurl</a> / <a href="/libcurl/c/">API</a> / <a href="/libcurl/c/example.html">Examples</a> / <b>https.c</b></div>
+<h1> https.c </h1>
+<div class="relatedbox" style="background-color: rgba(255,255,255,1); opacity: 1;">
+<b>Related:</b>
+<br><a href="https://github.com/curl/curl/issues/new?title=https.c%20example&amp;labels=documentation" target="_new">File a bug about https.c</a>
+<br><a href="https://github.com/curl/curl/blob/master/docs/examples/https.c" target="_new">View https.c in git</a>
+<br><a href="https://github.com/curl/curl/raw/master/docs/examples/https.c">Download https.c raw</a>
+</div>
+<div style="clear: both"/>
+<PRE>
+<I><FONT COLOR="#B22222">/***************************************************************************
+ *                                  _   _ ____  _
+ *  Project                     ___| | | |  _ \| |
+ *                             / __| | | | |_) | |
+ *                            | (__| |_| |  _ &lt;| |___
+ *                             \___|\___/|_| \_\_____|
+ *
+ * Copyright (C) 1998 - 2019, Daniel Stenberg, &lt;daniel@haxx.se&gt;, et al.
+ *
+ * This software is licensed as described in the file COPYING, which
+ * you should have received as part of this distribution. The terms
+ * are also available at https://curl.haxx.se/docs/copyright.html.
+ *
+ * You may opt to use, copy, modify, merge, publish, distribute and/or sell
+ * copies of the Software, and permit persons to whom the Software is
+ * furnished to do so, under the terms of the COPYING file.
+ *
+ * This software is distributed on an &quot;AS IS&quot; basis, WITHOUT WARRANTY OF ANY
+ * KIND, either express or implied.
+ *
+ ***************************************************************************/ </FONT></I>
+<I><FONT COLOR="#B22222">/* &lt;DESC&gt;
+ * Simple HTTPS GET
+ * &lt;/DESC&gt;
+ */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;curl/curl.h&gt;</FONT></B>
+&nbsp;
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B>)
+{
+  CURL *curl;
+  CURLcode res;
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_global_init.html">curl_global_init</a>(CURL_GLOBAL_DEFAULT);
+&nbsp;
+  curl = <a href="https://curl.haxx.se/libcurl/c/curl_easy_init.html">curl_easy_init</a>();
+  <B><FONT COLOR="#A020F0">if</FONT></B>(curl) {
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(curl, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_URL.html">CURLOPT_URL</a>, <B><FONT COLOR="#BC8F8F">&quot;https://example.com/&quot;</FONT></B>);
+&nbsp;
+#<B ><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">SKIP_PEER_VERIFICATION</FONT>
+    <I><FONT COLOR="#B22222">/*
+     * If you want to connect to a site who isn't using a certificate that is
+     * signed by one of the certs in the CA bundle you have, you can skip the
+     * verification of the server's certificate. This makes the connection
+     * A LOT LESS SECURE.
+     *
+     * If you have a CA cert for the server stored someplace else than in the
+     * default bundle, then the <a href="https://curl.haxx.se/libcurl/c/CURLOPT_CAPATH.html">CURLOPT_CAPATH</a> option might come handy for
+     * you.
+     */ </FONT></I>
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(curl, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYPEER.html">CURLOPT_SSL_VERIFYPEER</a>, 0L);
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+&nbsp;
+#<B ><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">SKIP_HOSTNAME_VERIFICATION</FONT>
+    <I><FONT COLOR="#B22222">/*
+     * If the site you're connecting to uses a different host name that what
+     * they have mentioned in their server certificate's commonName (or
+     * subjectAltName) fields, libcurl will refuse to connect. You can skip
+     * this check, but this will make the connection less secure.
+     */ </FONT></I>
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(curl, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYHOST.html">CURLOPT_SSL_VERIFYHOST</a>, 0L);
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+&nbsp;
+    <I><FONT COLOR="#B22222">/* Perform the request, res will get the return code */ </FONT></I>
+    res = <a href="https://curl.haxx.se/libcurl/c/curl_easy_perform.html">curl_easy_perform</a>(curl);
+    <I><FONT COLOR="#B22222">/* Check for errors */ </FONT></I>
+    <B><FONT COLOR="#A020F0">if</FONT></B>(res != CURLE_OK)
+      fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;<a href="https://curl.haxx.se/libcurl/c/curl_easy_perform.html">curl_easy_perform</a>() failed: %s\n&quot;</FONT></B>,
+              <a href="https://curl.haxx.se/libcurl/c/curl_easy_strerror.html">curl_easy_strerror</a>(res));
+&nbsp;
+    <I><FONT COLOR="#B22222">/* always cleanup */ </FONT></I>
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_cleanup.html">curl_easy_cleanup</a>(curl);
+  }
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_global_cleanup.html">curl_global_cleanup</a>();
+&nbsp;
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+}
+</PRE>
+</div>
+</div>
+<script defer src="https://www.fastly-insights.com/insights.js?k=8cb1247c-87c2-4af9-9229-768b1990f90b" type="text/javascript"></script>
+</BODY>
+</HTML>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD> <TITLE>libcurl example - multi-double.c</TITLE>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+<link rel="stylesheet" type="text/css" href="https://curl.haxx.se/curl.css">
+<link rel="shortcut icon" href="https://curl.haxx.se/favicon.ico">
+<link rel="icon" href="https://curl.haxx.se/logo/curl-symbol.svg" type="image/svg+xml">
+</HEAD>
+<body bgcolor="#ffffff" text="#000000">
+<div class="main">
+<div class="menu">
+<a href="https://curl.haxx.se/libcurl/c/libcurl.html" class="menuitem" title="Overview">Overview</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-tutorial.html" class="menuitem" title="Tutorial">Tutorial</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-errors.html" class="menuitem" title="Error Codes">Errors</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-env.html" class="menuitem" title="Environment variables ">Environment</a>
+<a href="https://curl.haxx.se/libcurl/c/example.html" class="itemselect">Examples</a>
+<a href="https://curl.haxx.se/libcurl/c/symbols-in-versions.html" class="menuitem" title="In which versions were which symbols introduced">Symbols</a>
+<a href="https://curl.haxx.se/libcurl/c/allfuncs.html" class="menuitem" title="List of all libcurl functions">Index</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-easy.html" class="menuitem" title="Easy interface tutorial">Easy Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-multi.html" class="menuitem" title="Multi Interface tutorial">Multi Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-share.html" class="menuitem" title="Share Interface Tutorial">Share Interface</a>
+</div>
+<div class="contents">
+<div class="where"><a href="https://curl.haxx.se/">curl</a> / <a href="/libcurl/">libcurl</a> / <a href="/libcurl/c/">API</a> / <a href="/libcurl/c/example.html">Examples</a> / <b>multi-double.c</b></div>
+<h1> multi-double.c </h1>
+<div class="relatedbox" style="background-color: rgba(255,255,255,1); opacity: 1;">
+<b>Related:</b>
+<br><a href="https://github.com/curl/curl/issues/new?title=multi-double.c%20example&amp;labels=documentation" target="_new">File a bug about multi-double.c</a>
+<br><a href="https://github.com/curl/curl/blob/master/docs/examples/multi-double.c" target="_new">View multi-double.c in git</a>
+<br><a href="https://github.com/curl/curl/raw/master/docs/examples/multi-double.c">Download multi-double.c raw</a>
+</div>
+<div style="clear: both"/>
+<PRE>
+<I><FONT COLOR="#B22222">/***************************************************************************
+ *                                  _   _ ____  _
+ *  Project                     ___| | | |  _ \| |
+ *                             / __| | | | |_) | |
+ *                            | (__| |_| |  _ &lt;| |___
+ *                             \___|\___/|_| \_\_____|
+ *
+ * Copyright (C) 1998 - 2018, Daniel Stenberg, &lt;daniel@haxx.se&gt;, et al.
+ *
+ * This software is licensed as described in the file COPYING, which
+ * you should have received as part of this distribution. The terms
+ * are also available at https://curl.haxx.se/docs/copyright.html.
+ *
+ * You may opt to use, copy, modify, merge, publish, distribute and/or sell
+ * copies of the Software, and permit persons to whom the Software is
+ * furnished to do so, under the terms of the COPYING file.
+ *
+ * This software is distributed on an &quot;AS IS&quot; basis, WITHOUT WARRANTY OF ANY
+ * KIND, either express or implied.
+ *
+ ***************************************************************************/ </FONT></I>
+<I><FONT COLOR="#B22222">/* &lt;DESC&gt;
+ * multi interface code doing two parallel HTTP transfers
+ * &lt;/DESC&gt;
+ */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>
+&nbsp;
+<I><FONT COLOR="#B22222">/* somewhat unix-specific */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/time.h&gt;</FONT></B>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>
+&nbsp;
+<I><FONT COLOR="#B22222">/* curl stuff */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;curl/curl.h&gt;</FONT></B>
+&nbsp;
+<I><FONT COLOR="#B22222">/*
+ * Simply download two HTTP files!
+ */ </FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B>)
+{
+  CURL *http_handle;
+  CURL *http_handle2;
+  CURLM *multi_handle;
+&nbsp;
+  <B><FONT COLOR="#228B22">int</FONT></B> still_running = 0; <I><FONT COLOR="#B22222">/* keep number of running handles */ </FONT></I>
+&nbsp;
+  http_handle = <a href="https://curl.haxx.se/libcurl/c/curl_easy_init.html">curl_easy_init</a>();
+  http_handle2 = <a href="https://curl.haxx.se/libcurl/c/curl_easy_init.html">curl_easy_init</a>();
+&nbsp;
+  <I><FONT COLOR="#B22222">/* set options */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(http_handle, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_URL.html">CURLOPT_URL</a>, <B><FONT COLOR="#BC8F8F">&quot;https://www.example.com/&quot;</FONT></B>);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* set options */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(http_handle2, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_URL.html">CURLOPT_URL</a>, <B><FONT COLOR="#BC8F8F">&quot;http://localhost/&quot;</FONT></B>);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* init a multi stack */ </FONT></I>
+  multi_handle = <a href="https://curl.haxx.se/libcurl/c/curl_multi_init.html">curl_multi_init</a>();
+&nbsp;
+  <I><FONT COLOR="#B22222">/* add the individual transfers */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_multi_add_handle.html">curl_multi_add_handle</a>(multi_handle, http_handle);
+  <a href="https://curl.haxx.se/libcurl/c/curl_multi_add_handle.html">curl_multi_add_handle</a>(multi_handle, http_handle2);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* we start some action by calling perform right away */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_multi_perform.html">curl_multi_perform</a>(multi_handle, &amp;still_running);
+&nbsp;
+  <B><FONT COLOR="#A020F0">while</FONT></B>(still_running) {
+    <B><FONT COLOR="#228B22">struct</FONT></B> timeval timeout;
+    <B><FONT COLOR="#228B22">int</FONT></B> rc; <I><FONT COLOR="#B22222">/* select() return code */ </FONT></I>
+    CURLMcode mc; <I><FONT COLOR="#B22222">/* <a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>() return code */ </FONT></I>
+&nbsp;
+    fd_se<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD> <TITLE>libcurl example - multi-double.c</TITLE>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+<link rel="stylesheet" type="text/css" href="https://curl.haxx.se/curl.css">
+<link rel="shortcut icon" href="https://curl.haxx.se/favicon.ico">
+<link rel="icon" href="https://curl.haxx.se/logo/curl-symbol.svg" type="image/svg+xml">
+</HEAD>
+<body bgcolor="#ffffff" text="#000000">
+<div class="main">
+<div class="menu">
+<a href="https://curl.haxx.se/libcurl/c/libcurl.html" class="menuitem" title="Overview">Overview</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-tutorial.html" class="menuitem" title="Tutorial">Tutorial</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-errors.html" class="menuitem" title="Error Codes">Errors</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-env.html" class="menuitem" title="Environment variables ">Environment</a>
+<a href="https://curl.haxx.se/libcurl/c/example.html" class="itemselect">Examples</a>
+<a href="https://curl.haxx.se/libcurl/c/symbols-in-versions.html" class="menuitem" title="In which versions were which symbols introduced">Symbols</a>
+<a href="https://curl.haxx.se/libcurl/c/allfuncs.html" class="menuitemt fdread;
+    fd_set fdwrite;
+    fd_set fdexcep;
+    <B><FONT COLOR="#228B22">int</FONT></B> maxfd = -1;
+&nbsp;
+    <B><FONT COLOR="#228B22">long</FONT></B> curl_timeo = -1;
+&nbsp;
+    FD_ZERO(&amp;fdread);
+    FD_ZERO(&amp;fdwrite);
+    FD_ZERO(&amp;fdexcep);
+&nbsp;
+    <I><FONT COLOR="#B22222">/* set a suitable timeout to play around with */ </FONT></I>
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+&nbsp;
+    <a href="https://curl.haxx.se/libcurl/c/curl_multi_timeout.html">curl_multi_timeout</a>(multi_handle, &amp;curl_timeo);
+    <B><FONT COLOR="#A020F0">if</FONT></B>(curl_timeo &gt;= 0) {
+      timeout.tv_sec = curl_timeo / 1000;
+      <B><FONT COLOR="#A020F0">if</FONT></B>(timeout.tv_sec &gt; 1)
+        timeout.tv_sec = 1;
+      <B><FONT COLOR="#A020F0">else</FONT></B>
+        timeout.tv_usec = (curl_timeo % 1000) * 1000;
+    }
+&nbsp;
+    <I><FONT COLOR="#B22222">/* get file descriptors from the transfers */ </FONT></I>
+    mc = <a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>(multi_handle, &amp;fdread, &amp;fdwrite, &amp;fdexcep, &amp;maxfd);
+&nbsp;
+    <B><FONT COLOR="#A020F0">if</FONT></B>(mc != CURLM_OK) {
+      fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;<a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>() failed, code %d.\n&quot;</FONT></B>, mc);
+      <B><FONT COL" title="List of all libcurl functions">Index</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-easy.html" class="menuitem" title="Easy interface tutorial">Easy Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-multi.html" class="menuitem" title="Multi Interface tutorial">Multi Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-share.html" class="menuitem" title="Share Interface Tutorial">Share Interface</a>
+</div>
+<div class="contents">
+<div class="where"><a href="https://curl.haxx.se/">curl</a> / <a href="/libcurl/">libcurl</a> / <a href="/libcurl/c/">API</a> / <a href="/libcurl/c/example.html">Examples</a> / <b>multi-double.c</b></div>
+<h1> multi-double.c </h1>
+<div class="relatedbox" style="background-color: rgba(255,255,255,1); opacity: 1;">
+<b>Related:</b>
+<br><a href="https://github.com/curl/curl/issues/new?title=multi-double.c%20example&amp;labels=documentation" target="_new">File a bug about multi-double.c</a>
+<br><a href="https://github.com/curl/curl/blob/master/docs/examples/multi-double.c" target="_new">View multi-double.c in git</a>
+<br><a href="https://github.com/curl/curl/raw/master/docs/examples/multi-double.c">Download multi-double.c raw</a>
+</div>
+<div style="clear: both"/>
+<PRE>
+<I><FONT COLOR="#B22222">/***************************************************************************
+ *                         OR="#A020F0">break</FONT></B>;
+    }
+&nbsp;
+    <I><FONT COLOR="#B22222">/* On success the value of maxfd is guaranteed to be &gt;= -1. We call
+       select(maxfd + 1, ...); specially in case of (maxfd == -1) there are
+       no fds ready yet so we call select(0, ...) --or Sleep() on Windows--
+       to sleep 100ms, which is the minimum suggested value in the
+       <a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>() doc. */ </FONT></I>
+&nbsp;
+    <B><FONT COLOR="#A020F0">if</FONT></B>(maxfd == -1) {
+#<B ><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">_WIN32</FONT>
+      Sleep(100);
+      rc = 0;
+#<B ><FONT COLOR="#5F9EA0">else</FONT></B>
+      <I><FONT COLOR="#B22222">/* Portable sleep for platforms other than Windows. */ </FONT></I>
+      <B><FONT COLOR="#228B22">struct</FONT></B> timeval wait = { 0, 100 * 1000 }; <I><FONT COLOR="#B22222">/* 100ms */ </FONT></I>
+      rc = select(0, NULL, NULL, NULL, &amp;wait);
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+    }
+    <B><FONT COLOR="#A020F0">else</FONT></B> {
+      <I><FONT COLOR="#B22222">/* Note that on some platforms 'timeout' may be modified by select().
+         If you need access to the original value save a copy beforehand. */ </FONT></I>
+      rc = select(maxfd + 1, &amp;fdread, &amp;fdwrite, &amp;fdexcep, &amp;timeout);
+    }
+&nbsp;
+    <B><FONT COLOR="#A020F0">switch</FONT></B>(rc) {
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">-1</FONT></B>:
+      <I><FONT COLOR="#B22222">/* select error */ </FONT></I>
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">0</FONT></B>:
+    <B><FONT COLOR="#5F9EA0">default</FONT></B>:
+      <I><FONT COLOR="#B22222">/* timeout or readable/writable sockets */ </FONT></I>
+      <a href="https://curl.haxx.se/libcurl/c/curl_multi_perform.html">curl_multi_perform</a>(multi_handle, &amp;still_running);
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    }
+  }
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_multi_cleanup.html">curl_multi_cleanup</a>(multi_handle);
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_cleanup.html">curl_easy_cleanup</a>(http_handle);
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_cleanup.html">curl_easy_cleanup</a>(http_handle2);
+&nbsp;
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+}
+</PRE>
+</div>
+</div>
+<script defer src="https://www.fastly-insights.com/insights.js?k=8cb1247c-87c2-4af9-9229-768b1990f90b" type="text/javascript"></script>
+</BODY>
+</HTML>
+         _   _ ____  _
+ *  Project                     ___| | | |  _ \| |
+ *                             / __| | | | |_) | |
+ *                            | (__| |_| |  _ &lt;| |___
+ *                             \___|\___/|_| \_\_____|
+ *
+ * Copyright (C) 1998 - 2018, Daniel Stenberg, &lt;daniel@haxx.se&gt;, et al.
+ *
+ * This software is licensed as described in the file COPYING, which
+ * you should have received as part of this distribution. The terms
+ * are also available at https://curl.haxx.se/docs/copyright.html.
+ *
+ * You may opt to use, copy, modify, merge, publish, distribute and/or sell
+ * copies of the Software, and permit persons to whom the Software is
+ * furnished to do so, under the terms of the COPYING file.
+ *
+ * This software is distributed on an &quot;AS IS&quot; basis, WITHOUT WARRANTY OF ANY
+ * KIND, either express or implied.
+ *
+ ***************************************************************************/ </FONT></I>
+<I><FONT COLOR="#B22222">/* &lt;DESC&gt;
+ * multi interface code doing two parallel HTTP transfers
+ * &lt;/DESC&gt;
+ */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>
+&nbsp;
+<I><FONT COLOR="#B22222">/* somewhat unix-specific */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/time.h&gt;</FONT></B>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>
+&nbsp;
+<I><FONT COLOR="#B22222">/* curl stuff */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;curl/curl.h&gt;</FONT></B>
+&nbsp;
+<I><FONT COLOR="#B22222">/*
+ * Simply download two HTTP files!
+ */ </FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B>)
+{
+  CURL *http_handle;
+  CURL *http_handle2;
+  CURLM *multi_handle;
+&nbsp;
+  <B><FONT COLOR="#228B22">int</FONT></B> still_running = 0; <I><FONT COLOR="#B22222">/* keep number of running handles */ </FONT></I>
+&nbsp;
+  http_handle = <a href="https://curl.haxx.se/libcurl/c/curl_easy_init.html">curl_easy_init</a>();
+  http_handle2 = <a href="https://curl.haxx.se/libcurl/c/curl_easy_init.html">curl_easy_init</a>();
+&nbsp;
+  <I><FONT COLOR="#B22222">/* set options */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(http_handle, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_URL.html">CURLOPT_URL</a>, <B><FONT COLOR="#BC8F8F">&quot;https://www.example.com/&quot;</FONT></B>);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* set options */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(http_handle2, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_URL.html">CURLOPT_URL</a>, <B><FONT COLOR="#BC8F8F">&quot;http://localhost/&quot;</FONT></B>);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* init a multi stack */ </FONT></I>
+  multi_handle = <a href="https://curl.haxx.se/libcurl/c/curl_multi_init.html">curl_multi_init</a>();
+&nbsp;
+  <I><FONT COLOR="#B22222">/* add the individual transfers */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_multi_add_handle.html">curl_multi_add_handle</a>(multi_handle, http_handle);
+  <a href="https://curl.haxx.se/libcurl/c/curl_multi_add_handle.html">curl_multi_add_handle</a>(multi_handle, http_handle2);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* we start some action by calling perform right away */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_multi_perform.html">curl_multi_perform</a>(multi_handle, &amp;still_running);
+&nbsp;
+  <B><FONT COLOR="#A020F0">while</FONT></B>(still_running) {
+    <B><FONT COLOR="#228B22">struct</FONT></B> timeval timeout;
+    <B><FONT COLOR="#228B22">int</FONT></B> rc; <I><FONT COLOR="#B22222">/* select() return code */ </FONT></I>
+    CURLMcode mc; <I><FONT COLOR="#B22222">/* <a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>() return code */ </FONT></I>
+&nbsp;
+    fd_se<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD> <TITLE>libcurl example - multi-double.c</TITLE>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+<link rel="stylesheet" type="text/css" href="https://curl.haxx.se/curl.css">
+<link rel="shortcut icon" href="https://curl.haxx.se/favicon.ico">
+<link rel="icon" href="https://curl.haxx.se/logo/curl-symbol.svg" type="image/svg+xml">
+</HEAD>
+<body bgcolor="#ffffff" text="#000000">
+<div class="main">
+<div class="menu">
+<a href="https://curl.haxx.se/libcurl/c/libcurl.html" class="menuitem" title="Overview">Overview</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-tutorial.html" class="menuitem" title="Tutorial">Tutorial</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-errors.html" class="menuitem" title="Error Codes">Errors</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-env.html" class="menuitem" title="Environment variables ">Environment</a>
+<a href="https://curl.haxx.se/libcurl/c/example.html" class="itemselect">Examples</a>
+<a href="https://curl.haxx.se/libcurl/c/symbols-in-versions.html" class="menuitem" title="In which versions were which symbols introduced">Symbols</a>
+<a href="https://curl.haxx.se/libcurl/c/allfuncs.html" class="menuitem" title="List of all libcurl functions">Index</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-easy.html" class="menuitem" title="Easy interface tutorial">Easy Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-multi.html" class="menuitem" title="Multi Interface tutorial">Multi Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-share.html" class="menuitem" title="Share Interface Tutorial">Share Interface</a>
+</div>
+<div class="contents">
+<div class="where"><a href="https://curl.haxx.se/">curl</a> / <a href="/libcurl/">libcurl</a> / <a href="/libcurl/c/">API</a> / <a href="/libcurl/c/example.html">Examples</a> / <b>multi-double.c</b></div>
+<h1> multi-double.c </h1>
+<div class="relatedbox" style="background-color: rgba(255,255,255,1); opacity: 1;">
+<b>Related:</b>
+<br><a href="https://github.com/curl/curl/issues/new?title=multi-double.c%20example&amp;labels=documentation" target="_new">File a bug about multi-double.c</a>
+<br><a href="https://github.com/curl/curl/blob/master/docs/examples/multi-double.c" target="_new">View multi-double.c in git</a>
+<br><a href="https://github.com/curl/curl/raw/master/docs/examples/multi-double.c">Download multi-double.c raw</a>
+</div>
+<div style="clear: both"/>
+<PRE>
+<I><FONT COLOR="#B22222">/***************************************************************************
+ *                                  _   _ ____  _
+ *  Project                     ___| | | |  _ \| |
+ *                             / __| | | | |_) | |
+ *                            | (__| |_| |  _ &lt;| |___
+ *                             \___|\___/|_| \_\_____|
+ *
+ * Copyright (C) 1998 - 2018, Daniel Stenberg, &lt;daniel@haxx.se&gt;, et al.
+ *
+ * This software is licensed as described in the file COPYING, which
+ * you should have received as part of this distribution. The terms
+ * are also available at https://curl.haxx.se/docs/copyright.html.
+ *
+ * You may opt to use, copy, modify, merge, publish, distribute and/or sell
+ * copies of the Software, and permit persons to whom the Software is
+ * furnished to do so, under the terms of the COPYING file.
+ *
+ * This software is distributed on an &quot;AS IS&quot; basis, WITHOUT WARRANTY OF ANY
+ * KIND, either express or implied.
+ *
+ ***************************************************************************/ </FONT></I>
+<I><FONT COLOR="#B22222">/* &lt;DESC&gt;
+ * multi interface code doing two parallel HTTP transfers
+ * &lt;/DESC&gt;
+ */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>
+&nbsp;
+<I><FONT COLOR="#B22222">/* somewhat unix-specific */ </FONT></I>
+#<B ><FONT COLORt fdread;
+    fd_set fdwrite;
+    fd_set fdexcep;
+    <B><FONT COLOR="#228B22">int</FONT></B> maxfd = -1;
+&nbsp;
+    <B><FONT COLOR="#228B22">long</FONT></B> curl_timeo = -1;
+&nbsp;
+    FD_ZERO(&amp;fdread);
+    FD_ZERO(&amp;fdwrite);
+    FD_ZERO(&amp;fdexcep);
+&nbsp;
+    <I><FONT COLOR="#B22222">/* set a suitable timeout to play around with */ </FONT></I>
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+&nbsp;
+    <a href="https://curl.haxx.se/libcurl/c/curl_multi_timeout.html">curl_multi_timeout</a>(multi_handle, &amp;curl_timeo);
+    <B><FONT COLOR="#A020F0">if</FONT></B>(curl_timeo &gt;= 0) {
+      timeout.tv_sec = curl_timeo / 1000;
+      <B><FONT COLOR="#A020F0">if</FONT></B>(timeout.tv_sec &gt; 1)
+        timeout.tv_sec = 1;
+      <B><FONT COLOR="#A020F0">else</FONT></B>
+        timeout.tv_usec = (curl_timeo % 1000) * 1000;
+    }
+&nbsp;
+    <I><FONT COLOR="#B22222">/* get file descriptors from the transfers */ </FONT></I>
+    mc = <a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>(multi_handle, &amp;fdread, &amp;fdwrite, &amp;fdexcep, &amp;maxfd);
+&nbsp;
+    <B><FONT COLOR="#A020F0">if</FONT></B>(mc != CURLM_OK) {
+      fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;<a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>() failed, code %d.\n&quot;</FONT></B>, mc);
+      <B><FONT COL="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/time.h&gt;</FONT></B>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>
+&nbsp;
+<I><FONT COLOR="#B22222">/* curl stuff */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;curl/curl.h&gt;</FONT></B>
+&nbsp;
+<I><FONT COLOR="#B22222">/*
+ * Simply download two HTTP files!
+ */ </FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B>)
+{
+  CURL *http_handle;
+  CURL *http_handle2;
+  CURLM *multi_handle;
+&nbsp;
+  <B><FONT COLOR="#228B22">int</FONT></B> still_running = 0; <I><FONT COLOR="#B22222">/* keep number of running handles */ </FONT></I>
+&nbsp;
+  http_handle = <a href="https://curl.haxx.se/libcurl/c/curl_easy_init.html">curl_easy_init</a>();
+  http_handle2 = <a href="https://curl.haxx.se/libcurl/c/curl_easy_init.html">curl_easy_init</a>();
+&nbsp;
+  <I><FONT COLOR="#B22222">/* set options */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(http_handle, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_URL.html">CURLOPT_URL</a>, <B><FONT COLOR="#BC8F8F">&quot;https://www.example.com/&quot;</FONT></B>);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* set options */ </FONT></I>
+  <a href="https://curOR="#A020F0">break</FONT></B>;
+    }
+&nbsp;
+    <I><FONT COLOR="#B22222">/* On success the value of maxfd is guaranteed to be &gt;= -1. We call
+       select(maxfd + 1, ...); specially in case of (maxfd == -1) there are
+       no fds ready yet so we call select(0, ...) --or Sleep() on Windows--
+       to sleep 100ms, which is the minimum suggested value in the
+       <a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>() doc. */ </FONT></I>
+&nbsp;
+    <B><FONT COLOR="#A020F0">if</FONT></B>(maxfd == -1) {
+#<B ><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">_WIN32</FONT>
+      Sleep(100);
+      rc = 0;
+#<B ><FONT COLOR="#5F9EA0">else</FONT></B>
+      <I><FONT COLOR="#B22222">/* Portable sleep for platforms other than Windows. */ </FONT></I>
+      <B><FONT COLOR="#228B22">struct</FONT></B> timeval wait = { 0, 100 * 1000 }; <I><FONT COLOR="#B22222">/* 100ms */ </FONT></I>
+      rc = select(0, NULL, NULL, NULL, &amp;wait);
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+    }
+    <B><FONT COLOR="#A020F0">else</FONT></B> {
+      <I><FONT COLOR="#B22222">/* Note that on some platforms 'timeout' may be modified by select().
+         If you need access to the original value save a copy beforehand. */ </FONT></I>
+      rc = select(maxfd + 1, &amp;fdread, &amp;fdwrite, &amp;fdexcep, &amp;timeout);
+    }
+&nbsp;
+    <B><Fl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(http_handle2, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_URL.html">CURLOPT_URL</a>, <B><FONT COLOR="#BC8F8F">&quot;http://localhost/&quot;</FONT></B>);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* init a multi stack */ </FONT></I>
+  multi_handle = <a href="https://curl.haxx.se/libcurl/c/curl_multi_init.html">curl_multi_init</a>();
+&nbsp;
+  <I><FONT COLOR="#B22222">/* add the individual transfers */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_multi_add_handle.html">curl_multi_add_handle</a>(multi_handle, http_handle);
+  <a href="https://curl.haxx.se/libcurl/c/curl_multi_add_handle.html">curl_multi_add_handle</a>(multi_handle, http_handle2);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* we start some action by calling perform right away */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_multi_perform.html">curl_multi_perform</a>(multi_handle, &amp;still_running);
+&nbsp;
+  <B><FONT COLOR="#A020F0">while</FONT></B>(still_running) {
+    <B><FONT COLOR="#228B22">struct</FONT></B> timeval timeout;
+    <B><FONT COLOR="#228B22">int</FONT></B> rc; <I><FONT COLOR="#B22222">/* select() return code */ </FONT></I>
+    CURLMcode mc; <I><FONT COLOR="#B22222">/* <a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>() return code */ </FONT></I>
+&nbsp;
+    fd_seONT COLOR="#A020F0">switch</FONT></B>(rc) {
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">-1</FONT></B>:
+      <I><FONT COLOR="#B22222">/* select error */ </FONT></I>
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">0</FONT></B>:
+    <B><FONT COLOR="#5F9EA0">default</FONT></B>:
+      <I><FONT COLOR="#B22222">/* timeout or readable/writable sockets */ </FONT></I>
+      <a href="https://curl.haxx.se/libcurl/c/curl_multi_perform.html">curl_multi_perform</a>(multi_handle, &amp;still_running);
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    }
+  }
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_multi_cleanup.html">curl_multi_cleanup</a>(multi_handle);
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_cleanup.html">curl_easy_cleanup</a>(http_handle);
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_cleanup.html">curl_easy_cleanup</a>(http_handle2);
+&nbsp;
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+}
+</PRE>
+</div>
+</div>
+<script defer src="https://www.fastly-insights.com/insights.js?k=8cb1247c-87c2-4af9-9229-768b1990f90b" type="text/javascript"></script>
+</BODY>
+</HTML>
+t fdread;
+    fd_set fdwrite;
+    fd_set fdexcep;
+    <B><FONT COLOR="#228B22">int</FONT></B> maxfd = -1;
+&nbsp;
+    <B><FONT COLOR="#228B22">long</FONT></B> curl_timeo = -1;
+&nbsp;
+    FD_ZERO(&amp;fdread);
+    FD_ZERO(&amp;fdwrite);
+    FD_ZERO(&amp;fdexcep);
+&nbsp;
+    <I><FONT COLOR="#B22222">/* set a suitable timeout to play around with */ </FONT></I>
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+&nbsp;
+    <a href="https://curl.haxx.se/libcurl/c/curl_multi_timeout.html">curl_multi_timeout</a>(multi_handle, &amp;curl_timeo);
+    <B><FONT COLOR="#A020F0">if</FONT></B>(curl_timeo &gt;= 0) {
+      timeout.tv_sec = curl_timeo / 1000;
+      <B><FONT COLOR="#A020F0">if</FONT></B>(timeout.tv_sec &gt; 1)
+        timeout.tv_sec = 1;
+      <B><FONT COLOR="#A020F0">else</FONT></B>
+        timeout.tv_usec = (curl_timeo % 1000) * 1000;
+    }
+&nbsp;
+    <I><FONT COLOR="#B22222">/* get file descriptors from the transfers */ </FONT></I>
+    mc = <a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>(multi_handle, &amp;fdread, &amp;fdwrite, &amp;fdexcep, &amp;maxfd);
+&nbsp;
+    <B><FONT COLOR="#A020F0">if</FONT></B>(mc != CURLM_OK) {
+      fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;<a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>() failed, code %d.\n&quot;</FONT></B>, mc);
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    }
+&nbsp;
+    <I><FONT COLOR="#B22222">/* On success the value of maxfd is guaranteed to be &gt;= -1. We call
+       select(maxfd + 1, ...); specially in case of (maxfd == -1) there are
+       no fds ready yet so we call select(0, ...) --or Sleep() on Windows--
+       to sleep 100ms, which is the minimum suggested value in the
+       <a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>() doc. */ </FONT></I>
+&nbsp;
+    <B><FONT COLOR="#A020F0">if</FONT></B>(maxfd == -1) {
+#<B ><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">_WIN32</FONT>
+      Sleep(100);
+      rc = 0;
+#<B ><FONT COLOR="#5F9EA0">else</FONT></B>
+      <I><FONT COLOR="#B22222">/* Portable sleep for platforms other than Windows. */ </FONT></I>
+      <B><FONT COLOR="#228B22">struct</FONT></B> timeval wait = { 0, 100 * 1000 }; <I><FONT COLOR="#B22222">/* 100ms */ </FONT></I>
+      rc = select(0, NULL, NULL, NULL, &amp;wait);
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+    }
+    <B><FONT COLOR="#A020F0">else</FONT></B> {
+      <I><FONT COLOR="#B22222">/* Note that on some platforms 'timeout' may be modified by select().
+         If you need access to the original value save a copy beforehand. */ </FONT></I>
+      rc = select(maxfd + 1, &amp;fdread, &amp;fdwrite, &amp;fdexcep, &amp;timeout);
+    }
+&nbsp;
+    <B><FONT COLOR="#A020F0">switch</FONT></B>(rc) {
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">-1</FONT></B>:
+      <I><FONT COLOR="#B22222">/* select error */ </FONT></I>
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">0</FONT></B>:
+    <B><FONT COLOR="#5F9EA0">default</FONT></B>:
+      <I><FONT COLOR="#B22222">/* timeout or readable/writable sockets */ </FONT></I>
+      <a href="https://curl.haxx.se/libcurl/c/curl_multi_perform.html">curl_multi_perform</a>(multi_handle, &amp;still_running);
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    }
+  }
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_multi_cleanup.html">curl_multi_cleanup</a>(multi_handle);
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_cleanup.html">curl_easy_cleanup</a>(http_handle);
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_cleanup.html">curl_easy_cleanup</a>(http_handle2);
+&nbsp;
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+}
+</PRE>
+</div>
+</div>
+<script defer src="https://www.fastly-insights.com/insights.js?k=8cb1247c-87c2-4af9-9229-768b1990f90b" type="text/javascript"></script>
+</BODY>
+</HTML>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD> <TITLE>libcurl example - http2-download.c</TITLE>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+<link rel="stylesheet" type="text/css" href="https://curl.haxx.se/curl.css">
+<link rel="shortcut icon" href="https://curl.haxx.se/favicon.ico">
+<link rel="icon" href="https://curl.haxx.se/logo/curl-symbol.svg" type="image/svg+xml">
+</HEAD>
+<body bgcolor="#ffffff" text="#000000">
+<div class="main">
+<div class="menu">
+<a href="https://curl.haxx.se/libcurl/c/libcurl.html" class="menuitem" title="Overview">Overview</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-tutorial.html" class="menuitem" title="Tutorial">Tutorial</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-errors.html" class="menuitem" title="Error Codes">Errors</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-env.html" class="menuitem" title="Environment variables ">Environment</a>
+<a href="https://curl.haxx.se/libcurl/c/example.html" class="itemselect">Examples</a>
+<a href="https://curl.haxx.se/libcurl/c/symbols-in-versions.html" class="menuitem" title="In which versions were which symbols introduced">Symbols</a>
+<a href="https://curl.haxx.se/libcurl/c/allfuncs.html" class="menuitem" title="List of all libcurl functions">Index</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-easy.html" class="menuitem" title="Easy interface tutorial">Easy Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-multi.html" class="menuitem" title="Multi Interface tutorial">Multi Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-share.html" class="menuitem" title="Share Interface Tutorial">Share Interface</a>
+</div>
+<div class="contents">
+<div class="where"><a href="https://curl.haxx.se/">curl</a> / <a href="/libcurl/">libcurl</a> / <a href="/libcurl/c/">API</a> / <a href="/libcurl/c/example.html">Examples</a> / <b>http2-download.c</b></div>
+<h1> http2-download.c </h1>
+<div class="relatedbox" style="background-color: rgba(255,255,255,1); opacity: 1;">
+<b>Related:</b>
+<br><a href="https://github.com/curl/curl/issues/new?title=http2-download.c%20example&amp;labels=documentation" target="_new">File a bug about http2-download.c</a>
+<br><a href="https://github.com/curl/curl/blob/master/docs/examples/http2-download.c" target="_new">View http2-download.c in git</a>
+<br><a href="https://github.com/curl/curl/raw/master/docs/examples/http2-download.c">Download http2-download.c raw</a>
+</div>
+<div style="clear: both"/>
+<PRE>
+<I><FONT COLOR="#B22222">/***************************************************************************
+ *                                  _   _ ____  _
+ *  Project                     ___| | | |  _ \| |
+ *                             / __| | | | |_) | |
+ *                            | (__| |_| |  _ &lt;| |___
+ *                             \___|\___/|_| \_\_____|
+ *
+ * Copyright (C) 1998 - 2019, Daniel Stenberg, &lt;daniel@haxx.se&gt;, et al.
+ *
+ * This software is licensed as described in the file COPYING, which
+ * you should have received as part of this distribution. The terms
+ * are also available at https://curl.haxx.se/docs/copyright.html.
+ *
+ * You may opt to use, copy, modify, merge, publish, distribute and/or sell
+ * copies of the Software, and permit persons to whom the Software is
+ * furnished to do so, under the terms of the COPYING file.
+ *
+ * This software is distributed on an &quot;AS IS&quot; basis, WITHOUT WARRANTY OF ANY
+ * KIND, either express or implied.
+ *
+ ***************************************************************************/ </FONT></I>
+<I><FONT COLOR="#B22222">/* &lt;DESC&gt;
+ * Multiplexed HTTP/2 downloads over a single connection
+ * &lt;/DESC&gt;
+ */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>
+&nbsp;
+<I><FONT COLOR="#B22222">/* somewhat unix-specific */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/time.h&gt;</FONT></B>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>
+&nbsp;
+<I><FONT COLOR="#B22222">/* curl stuff */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;curl/curl.h&gt;</FONT></B>
+&nbsp;
+#<B ><FONT COLOR="#5F9EA0">ifndef</FONT></B> <FONT COLOR="#B8860B">CURLPIPE_MULTIPLEX</FONT>
+<I><FONT COLOR="#B22222">/* This little trick will just make sure that we don't enable pipelining for
+   libcurls old enough to not have this symbol. It is _not_ defined to zero in
+   a recent libcurl header. */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">CURLPIPE_MULTIPLEX</FONT> 0
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+&nbsp;
+<B><FONT COLOR="#228B22">struct</FONT></B> transfer {
+  CURL *easy;
+  <B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B> num;
+  FILE *out;
+};
+&nbsp;
+#<B ><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">NUM_HANDLES</FONT> 1000
+&nbsp;
+<B><FONT COLOR="#228B22">static</FONT></B>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">dump</FONT></B>(<B><FONT COLOR="#228B22">const</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> *text, <B><FONT COLOR="#228B22">int</FONT></B> num, <B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> *ptr, size_t size,
+          <B><FONT COLOR="#228B22">char</FONT></B> nohex)
+{
+  size_t i;
+  size_t c;
+&nbsp;
+  <B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B> width = 0x10;
+&nbsp;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(nohex)
+    <I><FONT COLOR="#B22222">/* without the hex output, we can fit more on screen */ </FONT></I>
+    width = 0x40;
+&nbsp;
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;%d %s, %lu bytes (0x%lx)\n&quot;</FONT></B>,
+          num, text, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)size, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)size);
+&nbsp;
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i = 0; i&lt;size; i += width) {
+&nbsp;
+    fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;%4.4lx: &quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)i);
+&nbsp;
+    <B><FONT COLOR="#A020F0">if</FONT></B>(!nohex) {
+      <I><FONT COLOR="#B22222">/* hex not disabled, show it */ </FONT></I>
+      <B><FONT COLOR="#A020F0">for</FONT></B>(c = 0; c &lt; width; c++)
+        <B><FONT COLOR="#A020F0">if</FONT></B>(i + c &lt; size)
+          fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;%02x &quot;</FONT></B>, ptr[i + c]);
+        <B><FONT COLOR="#A020F0">else</FONT></B>
+          fputs(<B><FONT COLOR="#BC8F8F">&quot;   &quot;</FONT></B>, stderr);
+    }
+&nbsp;
+    <B><FONT COLOR="#A020F0">for</FONT></B>(c = 0; (c &lt; width) &amp;&amp; (i + c &lt; size); c++) {
+      <I><FONT COLOR="#B22222">/* check for 0D0A; if found, skip past and start a new line of output */ </FONT></I>
+      <B><FONT COLOR="#A020F0">if</FONT></B>(nohex &amp;&amp; (i + c + 1 &lt; size) &amp;&amp; ptr[i + c] == 0x0D &amp;&amp;
+         ptr[i + c + 1] == 0x0A) {
+        i += (c + 2 - width);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      }
+      fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;%c&quot;</FONT></B>,
+              (ptr[i + c] &gt;= 0x20) &amp;&amp; (ptr[i + c]&lt;0x80)?ptr[i + c]:<B><FONT COLOR="#BC8F8F">'.'</FONT></B>);
+      <I><FONT COLOR="#B22222">/* check again for 0D0A, to avoid an extra \n if it's at width */ </FONT></I>
+      <B><FONT COLOR="#A020F0">if</FONT></B>(nohex &amp;&amp; (i + c + 2 &lt; size) &amp;&amp; ptr[i + c + 1] == 0x0D &amp;&amp;
+         ptr[i + c + 2] == 0x0A) {
+        i += (c + 3 - width);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      }
+    }
+    fputc(<B><FONT COLOR="#BC8F8F">'\n'</FONT></B>, stderr); <I><FONT COLOR="#B22222">/* newline */ </FONT></I>
+  }
+}
+&nbsp;
+<B><FONT COLOR="#228B22">static</FONT></B>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">my_trace</FONT></B>(CURL *handle, curl_infotype type,
+             <B><FONT COLOR="#228B22">char</FONT></B> *data, size_t size,
+             <B><FONT COLOR="#228B22">void</FONT></B> *userp)
+{
+  <B><FONT COLOR="#228B22">const</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> *text;
+  <B><FONT COLOR="#228B22">struct</FONT></B> transfer *t = (<B><FONT COLOR="#228B22">struct</FONT></B> transfer *)userp;
+  <B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B> num = t-&gt;num;
+  (<B><FONT COLOR="#228B22">void</FONT></B>)handle; <I><FONT COLOR="#B22222">/* prevent compiler warning */ </FONT></I>
+&nbsp;
+  <B><FONT COLOR="#A020F0">switch</FONT></B>(type) {
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0"><a href="https://curl.haxx.se/libcurl/c/CURLINFO_TEXT.html">CURLINFO_TEXT</a></FONT></B>:
+    fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;== %u Info: %s&quot;</FONT></B>, num, data);
+    <I><FONT COLOR="#B22222">/* FALLTHROUGH */ </FONT></I>
+  <B><FONT COLOR="#5F9EA0">default</FONT></B>: <I><FONT COLOR="#B22222">/* in case a new one is introduced to shock us */ </FONT></I>
+    <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+&nbsp;
+  <B><FONT CO<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD> <TITLE>libcurl example - http2-download.c</TITLE>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+<link rel="stylesheet" type="text/css" href="https://curl.haxx.se/curl.css">
+<link rel="shortcut icon" href="https://curl.haxx.se/favicon.ico">
+<link rel="icon" href="https://curl.haxx.se/logo/curl-symbol.svg" type="image/svg+xml">
+</HEAD>
+<body bgcolor="#ffffff" text="#000000">
+<div class="main">
+<div class="menu">
+<a href="https://curl.haxx.se/libcurl/c/libcurl.html" class="menuitem" title="Overview">Overview</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-tutorial.html" class="menuitem" title="Tutorial">Tutorial</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-errors.html" class="menuitem" title="Error Codes">Errors</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-env.html" class="menuitem" title="Environment variables ">Environment</a>
+<a href="https://curl.haxx.se/libcurl/c/example.html" class="itemselect">Examples</a>
+<a href="https://curl.haxx.se/libcurl/c/symbols-in-versions.html" class="menuitem" title="In which versions were which symbols introduced">Symbols</a>
+<a href="https://curl.haxx.se/libcurl/c/allfuncs.html" class="menuitLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0"><a href="https://curl.haxx.se/libcurl/c/CURLINFO_HEADER_OUT.html">CURLINFO_HEADER_OUT</a></FONT></B>:
+    text = <B><FONT COLOR="#BC8F8F">&quot;=&gt; Send header&quot;</FONT></B>;
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0"><a href="https://curl.haxx.se/libcurl/c/CURLINFO_DATA_OUT.html">CURLINFO_DATA_OUT</a></FONT></B>:
+    text = <B><FONT COLOR="#BC8F8F">&quot;=&gt; Send data&quot;</FONT></B>;
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0"><a href="https://curl.haxx.se/libcurl/c/CURLINFO_SSL_DATA_OUT.html">CURLINFO_SSL_DATA_OUT</a></FONT></B>:
+    text = <B><FONT COLOR="#BC8F8F">&quot;=&gt; Send SSL data&quot;</FONT></B>;
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0"><a href="https://curl.haxx.se/libcurl/c/CURLINFO_HEADER_IN.html">CURLINFO_HEADER_IN</a></FONT></B>:
+    text = <B><FONT COLOR="#BC8F8F">&quot;&lt;= Recv header&quot;</FONT></B>;
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0"><a href="https://curl.haxx.se/libcurl/c/CURLINFO_DATA_IN.html">CURLINFO_DATA_IN</a></FONT></B>:
+    text = <B><FONT COLOR="#BC8F8F">&quot;&lt;= Recv data&quot;</FONT></B>;
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0"><a href="https://curl.haxx.se/libcurl/c/CURLINFO_SSL_DATA_IN.html">CURLINFO_SSL_DATA_IN</a></FONT></B>:
+    text = <B><FONT COLOR="#BC8F8F">&quot;&lt;= Recv SSL data&quot;</FONT></B>;
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  }
+&nbsp;
+  dump(text, num, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> *)data, size, 1);
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+}
+&nbsp;
+<B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">setup</FONT></B>(<B><FONT COLOR="#228B22">struct</FONT></B> transfer *t, <B><FONT COLOR="#228B22">int</FONT></B> num)
+{
+  <B><FONT COLOR="#228B22">char</FONT></B> filename[128];
+  CURL *hnd;
+&nbsp;
+  hnd = t-&gt;easy = <a href="https://curl.haxx.se/libcurl/c/curl_easy_init.html">curl_easy_init</a>();
+&nbsp;
+  snprintf(filename, 128, <B><FONT COLOR="#BC8F8F">&quot;dl-%d&quot;</FONT></B>, num);
+&nbsp;
+  t-&gt;out = fopen(filename, <B><FONT COLOR="#BC8F8F">&quot;wb&quot;</FONT></B>);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* write to this file */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURem" title="List of all libcurl functions">Index</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-easy.html" class="menuitem" title="Easy interface tutorial">Easy Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-multi.html" class="menuitem" title="Multi Interface tutorial">Multi Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-share.html" class="menuitem" title="Share Interface Tutorial">Share Interface</a>
+</div>
+<div class="contents">
+<div class="where"><a href="https://curl.haxx.se/">curl</a> / <a href="/libcurl/">libcurl</a> / <a href="/libcurl/c/">API</a> / <a href="/libcurl/c/example.html">Examples</a> / <b>http2-download.c</b></div>
+<h1> http2-download.c </h1>
+<div class="relatedbox" style="background-color: rgba(255,255,255,1); opacity: 1;">
+<b>Related:</b>
+<br><a href="https://github.com/curl/curl/issues/new?title=http2-download.c%20example&amp;labels=documentation" target="_new">File a bug about http2-download.c</a>
+<br><a href="https://github.com/curl/curl/blob/master/docs/examples/http2-download.c" target="_new">View http2-download.c in git</a>
+<br><a href="https://github.com/curl/curl/raw/master/docs/examples/http2-download.c">Download http2-download.c raw</a>
+</div>
+<div style="clear: both"/>
+<PRE>
+<I><FONT COLOR="#B22222">/***************************************************************************
+ *                                  _   _ ____  _
+ *  Project                     ___| | | |  _ \| |
+ *                             / __| | | | |_) | |
+ *                            | (__| |_| |  _ &lt;| |___
+ *                             \___|\___/|_| \_\_____|
+ *
+ * Copyright (C) 1998 - 2019, Daniel Stenberg, &lt;daniel@haxx.se&gt;, et al.
+ *
+ * This software is licensed as described in the file COPYING, which
+ * you should have received as part of this distribution. The terms
+ * are also available at https://curl.haxx.se/docs/copyright.html.
+ *
+ * You may opt to use, copy, modify, merge, publish, distribute and/or sell
+ * copies of the Software, and permit persons to whom the Software is
+ * furnished to do so, under the terms of the COPYING file.
+ *
+ * This software is distributed on an &quot;AS IS&quot; basis, WITHOUT WARRANTY OF ANY
+ * KIND, either express or implied.
+ *
+ ***************************************************************************/ </FONT></I>
+<I><FONT COLOR="#B22222">/* &lt;DESC&gt;
+ * Multiplexed HTTP/2 downloads over a single connection
+ * &lt;/DESC&gt;
+ */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>
+&nbsp;
+<I><FONT COLOR="#B22222">/* somewhat unix-specific */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/time.h&gt;</FONT></B>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>
+&nbsp;
+<I><FONT COLOR="#B22222">/* curl stuff */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;curl/curl.h&gt;</FONT></B>
+&nbsp;
+#<B ><FONT COLOR="#5F9EA0">ifndef</FONT></B> <FONT COLOR="#B8860B">CURLPIPE_MULTIPLEX</FONT>
+<I><FONT COLOR="#B22222">/* This little trick will just make sure that we don't enable pipelining for
+   libcurls old enough to not have this symbol. It is _not_ defined to zero in
+   a recent libcurl header. */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">CURLPIPE_MULTIPLEX</FONT> 0
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+&nbsp;
+<B><FONT COLOR="#228B22">struct</FONT></B> transfer {
+  CURL *easy;
+  <B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B> num;
+  FILE *out;
+};
+&nbsp;
+#<B ><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">NUM_HANDLES</FONT> 1000
+&nbsp;
+<B><FONT COLOR="#228B22">static</FONT></B>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">dump</FONT></B>(<B><FONT COLOR="#228B22">const</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> *text, <B><FONT COLOR="#228B22">int</FONT></B> num, <B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> *ptr, size_t size,
+          <B><FONT COLOR="#228B22">char</FONT></B> nohex)
+{
+  size_t i;
+  size_t c;
+&nbsp;
+  <B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B> width = 0x10;
+&nbsp;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(nohex)
+    <I><FONT COLOR="#B22222">/* without the hex output, we can fit more on screen */ </FONT></I>
+    width = 0x40;
+&nbsp;
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;%d %s, %lu bytes (0x%lx)\n&quot;</FONT></B>,
+          num, text, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)size, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)size);
+&nbsp;
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i = 0; i&lt;size; i += width) {
+&nbsp;
+    fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;%4.4lx: &quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)i);
+&nbsp;
+    <B><FONT COLOR="#A020F0">if</FONT></B>(!nohex) {
+      <I><FONT COLOR="#B22222">/* hex not disabled, show it */ </FONT></I>
+      <B><FONT COLOR="#A020F0">for</FONT></B>(c = 0; c &lt; width; c++)
+        <B><FONT COLOR="#A020F0">if</FONT></B>(i + c &lt; size)
+          fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;%02x &quot;</FONT></B>, ptr[i + c]);
+        <B><FONT COLOR="#A020F0">else</FONT></B>
+          fputs(<B><FONT COLOR="#BC8F8F">&quot;   &quot;</FONT></B>, stderr);
+    }
+&nbsp;
+    <B><FONT COLOR="#A020F0">for</FONT></B>(c = 0; (c &lt; width) &amp;&amp; (i + c &lt; size); c++) {
+      <I><FONT COLOR="#B22222">/* check for 0D0A; if found, skip past and start a new line of output */ </FONT></I>
+      <B><FONT COLOR="#A020F0">if</FONT></B>(nohex &amp;&amp; (i + c + 1 &lt; size) &amp;&amp; ptr[i + c] == 0x0D &amp;&amp;
+         ptr[i + c + 1] == 0x0A) {
+        i += (c + 2 - width);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      }
+      fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;%c&quot;</FONT></B>,
+              (ptr[i + c] &gt;= 0x20) &amp;&amp; (ptr[i + c]&lt;0x80)?ptr[i + c]:<B><FONT COLOR="#BC8F8F">'.'</FONT></B>);
+      <I><FONT COLOR="#B22222">/* check again for 0D0A, to avoid an extra \n if it's at width */ </FONT></I>
+      <B><FONT COLOR="#A020F0">if</FONT></B>(nohex &amp;&amp; (i + c + 2 &lt; size) &amp;&amp; ptr[i + c + 1] == 0x0D &amp;&amp;
+         ptr[i + c + 2] == 0x0A) {
+        i += (c + 3 - width);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      }
+    }
+    fputc(<B><FONT COLOR="#BC8F8F">'\n'</FONT></B>, stderr); <I><FONT COLOR="#B22222">/* newline */ </FONT></I>
+  }
+}
+&nbsp;
+<B><FONT COLOR="#228B22">static</FONT></B>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">my_trace</FONT></B>(CURL *handle, curl_infotype type,
+             <B><FONT COLOR="#228B22">char</FONT></B> *data, size_t size,
+             <B><FONT COLOR="#228B22">void</FONT></B> *userp)
+{
+  <B><FONT COLOR="#228B22">const</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> *text;
+  <B><FONT COLOR="#228B22">struct</FONT></B> transfer *t = (<B><FONT COLOR="#228B22">struct</FONT></B> transfer *)userp;
+  <B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B> num = t-&gt;num;
+  (<B><FONT COLOR="#228B22">void</FONT></B>)handle; <I><FONT COLOR="#B22222">/* prevent compiler warning */ </FONT></I>
+&nbsp;
+  <B><FONT COLOR="#A020F0">switch</FONT></B>(type) {
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0"><a href="https://curl.haxx.se/libcurl/c/CURLINFO_TEXT.html">CURLINFO_TEXT</a></FONT></B>:
+    fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;== %u Info: %s&quot;</FONT></B>, num, data);
+    <I><FONT COLOR="#B22222">/* FALLTHROUGH */ </FONT></I>
+  <B><FONT COLOR="#5F9EA0">default</FONT></B>: <I><FONT COLOR="#B22222">/* in case a new one is introduced to shock us */ </FONT></I>
+    <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+&nbsp;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0"><a href="https://curl.haxx.se/libcurl/c/CURLINFO_HEADER_OUT.html">CURLINFO_HEADER_OUT</a></FONT></B>:
+    text = <B><FONT COLOR="#BC8F8F">&quot;=&gt; Send header&quot;</FONT></B>;
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0"><a href="https://curl.haxx.se/libcurl/c/CURLINFO_DATA_OUT.html">CURLINFO_DATA_OUT</a></FONT></B>:
+    text = <B><FONT COLOR="#BC8F8F">&quot;=&gt; Send data&quot;</FONT></B>;
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0"><a href="https://curl.haxx.se/libcurl/c/CURLINFO_SSL_DATA_OUT.html">CURLINFO_SSL_DATA_OUT</a></FONT></B>:
+    text = <B><FONT COLOR="#BC8F8F">&quot;=&gt; Send SSL data&quot;</FONT></B>;
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0"><a href="https://curl.haxx.se/libcurl/c/CURLINFO_HEADER_IN.html">CURLINFO_HEADER_IN</a></FONT></B>:
+    text = <B><FONT COLOR="#BC8F8F">&quot;&lt;= Recv header&quot;</FONT></B>;
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0"><a href="https://curl.haxx.se/libcurl/c/CURLINFO_DATA_IN.html">CURLINFO_DATA_IN</a></FONT></B>:
+    text = <B><FONT COLOR="#BC8F8F">&quot;&lt;= Recv data&quot;</FONT></B>;
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0"><a href="https://curl.haxx.se/libcurl/c/CURLINFO_SSL_DATA_IN.html">CURLINFO_SSL_DATA_IN</a></FONT></B>:
+    text = <B><FONT COLOR="#BC8F8F">&quot;&lt;= Recv SSL data&quot;</FONT></B>;
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  }
+&nbsp;
+  dump(text, num, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> *)data, size, 1);
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+}
+&nbsp;
+<B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">setup</FONT></B>(<B><FONT COLOR="#228B22">struct</FONT></B> transfer *t, <B><FONT COLOR="#228B22">int</FONT></B> num)
+{
+  <B><FONT COLOR="#228B22">char</FONT></B> filename[128];
+  CURL *hnd;
+&nbsp;
+  hnd = t-&gt;easy = <a href="https://curl.haxx.se/libcurl/c/curl_easy_init.html">curl_easy_init</a>();
+&nbsp;
+  snprintf(filename, 128, <B><FONT COLOR="#BC8F8F">&quot;dl-%d&quot;</FONT></B>, num);
+&nbsp;
+  t-&gt;out = fopen(filename, <B><FONT COLOR="#BC8F8F">&quot;wb&quot;</FONT></B>);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* write to this file */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_WRITEDATA.html">CURLOPT_WRITEDATA</a>, t-&gt;out);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* set the same URL */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_URL.html">CURLOPT_URL</a>, <B><FONT COLOR="#BC8F8F">&quot;https://localhost:8443/index.html&quot;</FONT></B>);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* please be verbose */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_VERBOSE.html">CURLOPT_VERBOSE</a>, 1L);
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_DEBUGFUNCTION.html">CURLOPT_DEBUGFUNCTION</a>, my_trace);
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_DEBUGDATA.html">CURLOPT_DEBUGDATA</a>, t);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* HTTP/2 please */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_HTTP_VERSION.html">CURLOPT_HTTP_VERSION</a>, CURL_HTTP_VERSION_2_0);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* we use a self-signed test server, skip verification durinLOPT_WRITEDATA.html">CURLOPT_WRITEDATA</a>, t-&gt;out);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* set the same URL */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_URL.html">CURLOPT_URL</a>, <B><FONT COLOR="#BC8F8F">&quot;https://localhost:8443/index.html&quot;</FONT></B>);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* please be verbose */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_VERBOSE.html">CURLOPT_VERBOSE</a>, 1L);
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_DEBUGFUNCTION.html">CURLOPT_DEBUGFUNCTION</a>, my_trace);
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_DEBUGDATA.html">CURLOPT_DEBUGDATA</a>, t);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* HTTP/2 please */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_HTTP_VERSION.html">CURLOPT_HTTP_VERSION</a>, CURL_HTTP_VERSION_2_0);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* we use a self-signed test server, skip verification during debugging */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYPEER.html">CURLOPT_SSL_VERIFYPEER</a>, 0L);
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYHOST.html">CURLOPT_SSL_VERIFYHOST</a>, 0L);
+&nbsp;
+#<B ><FONT COLOR="#5F9EA0">if</FONT></B> (<FONT COLOR="#B8860B">CURLPIPE_MULTIPLEX</FONT> &gt; 0)
+  <I><FONT COLOR="#B22222">/* wait for pipe connection to confirm */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_PIPEWAIT.html">CURLOPT_PIPEWAIT</a>, 1L);
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+}
+&nbsp;
+<I><FONT COLOR="#B22222">/*
+ * Download many transfers over HTTP/2, using the same connection!
+ */ </FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> **argv)
+{
+  <B><FONT COLOR="#228B22">struct</FONT></B> transfer trans[NUM_HANDLES];
+  CURLM *multi_handle;
+  <B><FONT COLOR="#228B22">int</FONT></B> i;
+  <B><FONT COLOR="#228B22">int</FONT></B> still_running = 0; <I><FONT COLOR="#B22222">/* keep number of rung debugging */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYPEER.html">CURLOPT_SSL_VERIFYPEER</a>, 0L);
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYHOST.html">CURLOPT_SSL_VERIFYHOST</a>, 0L);
+&nbsp;
+#<B ><FONT COLOR="#5F9EA0">if</FONT></B> (<FONT COLOR="#B8860B">CURLPIPE_MULTIPLEX</FONT> &gt; 0)
+  <I><FONT COLOR="#B22222">/* wait for pipe connection to confirm */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_PIPEWAIT.html">CURLOPT_PIPEWAIT</a>, 1L);
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+}
+&nbsp;
+<I><FONT COLOR="#B22222">/*
+ * Download many transfers over HTTP/2, using the same connection!
+ */ </FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> **argv)
+{
+  <B><FONT COLOR="#228B22">struct</FONT></B> transfer trans[NUM_HANDLES];
+  CURLM *multi_handle;
+  <B><FONT COLOR="#228B22">int</FONT></B> i;
+  <B><FONT COLOR="#228B22">int</FONT></B> still_running = 0; <I><FONT COLOR="#B22222">/* keep number of running handles */ </FONT></I>
+  <B><FONT COLOR="#228B22">int</FONT></B> num_transfers;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(argc &gt; 1) {
+    <I><FONT COLOR="#B22222">/* if given a number, do that many transfers */ </FONT></I>
+    num_transfers = atoi(argv[1]);
+    <B><FONT COLOR="#A020F0">if</FONT></B>((num_transfers &lt; 1) || (num_transfers &gt; NUM_HANDLES))
+      num_transfers = 3; <I><FONT COLOR="#B22222">/* a suitable low default */ </FONT></I>
+  }
+  <B><FONT COLOR="#A020F0">else</FONT></B>
+    num_transfers = 3; <I><FONT COLOR="#B22222">/* suitable default */ </FONT></I>
+&nbsp;
+  <I><FONT COLOR="#B22222">/* init a multi stack */ </FONT></I>
+  multi_handle = <a href="https://curl.haxx.se/libcurl/c/curl_multi_init.html">curl_multi_init</a>();
+&nbsp;
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i = 0; i &lt; num_transfers; i++) {
+    setup(&amp;trans[i], i);
+&nbsp;
+    <I><FONT COLOR="#B22222">/* add the individual transfer */ </FONT></I>
+    <a href="https://curl.haxx.se/libcurl/c/curl_multi_add_handle.html">curl_multi_add_handle</a>(multi_handle, trans[i].easy);
+  }
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_multi_setopt.html">curl_multi_setopt</a>(multi_handle, <a href="https://curl.haxx.se/libcurl/c/CURLMOPT_PIPELINING.html">CURLMOPT_PIPELINING</a>, CURLPIPE_MULTIPLEX);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* we start some action byning handles */ </FONT></I>
+  <B><FONT COLOR="#228B22">int</FONT></B> num_transfers;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(argc &gt; 1) {
+    <I><FONT COLOR="#B22222">/* if given a number, do that many transfers */ </FONT></I>
+    num_transfers = atoi(argv[1]);
+    <B><FONT COLOR="#A020F0">if</FONT></B>((num_transfers &lt; 1) || (num_transfers &gt; NUM_HANDLES))
+      num_transfers = 3; <I><FONT COLOR="#B22222">/* a suitable low default */ </FONT></I>
+  }
+  <B><FONT COLOR="#A020F0">else</FONT></B>
+    num_transfers = 3; <I><FONT COLOR="#B22222">/* suitable default */ </FONT></I>
+&nbsp;
+  <I><FONT COLOR="#B22222">/* init a multi stack */ </FONT></I>
+  multi_handle = <a href="https://curl.haxx.se/libcurl/c/curl_multi_init.html">curl_multi_init</a>();
+&nbsp;
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i = 0; i &lt; num_transfers; i++) {
+    setup(&amp;trans[i], i);
+&nbsp;
+    <I><FONT COLOR="#B22222">/* add the individual transfer */ </FONT></I>
+    <a href="https://curl.haxx.se/libcurl/c/curl_multi_add_handle.html">curl_multi_add_handle</a>(multi_handle, trans[i].easy);
+  }
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_multi_setopt.html">curl_multi_setopt</a>(multi_handle, <a href="https://curl.haxx.se/libcurl/c/CURLMOPT_PIPELINING.html">CURLMOPT_PIPELINING</a>, CURLPIPE_MULTIPLEX);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* we start some action by calling perform right away */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_multi_perform.html">curl_multi_perform</a>(multi_handle, &amp;still_running);
+&nbsp;
+  <B><FONT COLOR="#A020F0">while</FONT></B>(still_running) {
+    <B><FONT COLOR="#228B22">struct</FONT></B> timeval timeout;
+    <B><FONT COLOR="#228B22">int</FONT></B> rc; <I><FONT COLOR="#B22222">/* select() return code */ </FONT></I>
+    CURLMcode mc; <I><FONT COLOR="#B22222">/* <a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>() return code */ </FONT></I>
+&nbsp;
+    fd_set fdread;
+    fd_set fdwrite;
+    fd_set fdexcep;
+    <B><FONT COLOR="#228B22">int</FONT></B> maxfd = -1;
+&nbsp;
+    <B><FONT COLOR="#228B22">long</FONT></B> curl_timeo = -1;
+&nbsp;
+    FD_ZERO(&amp;fdread);
+    FD_ZERO(&amp;fdwrite);
+    FD_ZERO(&amp;fdexcep);
+&nbsp;
+    <I><FONT COLOR="#B22222">/* set a suitable timeout to play around with */ </FONT></I>
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+&nbsp;
+    <a href="https://curl.haxx.se/libcurl/c/curl_multi_timeout.html">curl_multi_timeout</a>(multi_handle, &amp;curl_timeo);
+    <B><FONT COLOR="#A020F0">if</FONT></B>(curl_timeo &gt;= 0) {
+      timeout.tv_sec = curl_timeo / 1000;
+      <B><FONT COLOR="#A020F0">if</FONT></B>(timeout.tv_sec &gt; 1)
+        timeout.tv_sec = 1;
+      <B><FONT COLOR="#A020F0">else</FONT> calling perform right away */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_multi_perform.html">curl_multi_perform</a>(multi_handle, &amp;still_running);
+&nbsp;
+  <B><FONT COLOR="#A020F0">while</FONT></B>(still_running) {
+    <B><FONT COLOR="#228B22">struct</FONT></B> timeval timeout;
+    <B><FONT COLOR="#228B22">int</FONT></B> rc; <I><FONT COLOR="#B22222">/* select() return code */ </FONT></I>
+    CURLMcode mc; <I><FONT COLOR="#B22222">/* <a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>() return code */ </FONT></I>
+&nbsp;
+    fd_set fdread;
+    fd_set fdwrite;
+    fd_set fdexcep;
+    <B><FONT COLOR="#228B22">int</FONT></B> maxfd = -1;
+&nbsp;
+    <B><FONT COLOR="#228B22">long</FONT></B> curl_timeo = -1;
+&nbsp;
+    FD_ZERO(&amp;fdread);
+    FD_ZERO(&amp;fdwrite);
+    FD_ZERO(&amp;fdexcep);
+&nbsp;
+    <I><FONT COLOR="#B22222">/* set a suitable timeout to play around with */ </FONT></I>
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+&nbsp;
+    <a href="https://curl.haxx.se/libcurl/c/curl_multi_timeout.html">curl_multi_timeout</a>(multi_handle, &amp;curl_timeo);
+    <B><FONT COLOR="#A020F0">if</FONT></B>(curl_timeo &gt;= 0) {
+      timeout.tv_sec = curl_timeo / 1000;
+      <B><FONT COLOR="#A020F0">if</FONT></B>(timeout.tv_sec &gt; 1)
+        timeout.tv_sec = 1;
+      <B><FONT COLOR="#A020F0">else</FONT></B>
+        timeout.tv_usec = (curl_timeo % 1000) * 1000;
+    }
+&nbsp;
+    <I><FONT COLOR="#B22222">/* get file descriptors from the transfers */ </FONT></I>
+    mc = <a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>(multi_handle, &amp;fdread, &amp;fdwrite, &amp;fdexcep, &amp;maxfd);
+&nbsp;
+    <B><FONT COLOR="#A020F0">if</FONT></B>(mc != CURLM_OK) {
+      fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;<a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>() failed, code %d.\n&quot;</FONT></B>, mc);
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    }
+&nbsp;
+    <I><FONT COLOR="#B22222">/* On success the value of maxfd is guaranteed to be &gt;= -1. We call
+       select(maxfd + 1, ...); specially in case of (maxfd == -1) there are
+       no fds ready yet so we call select(0, ...) --or Sleep() on Windows--
+       to sleep 100ms, which is the minimum suggested value in the
+       <a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>() doc. */ </FONT></I>
+&nbsp;
+    <B><FONT COLOR="#A020F0">if</FONT></B>(maxfd == -1) {
+#<B ><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">_WIN32</FONT>
+      Sleep(100);
+      rc = 0;
+#<B ><FONT COLOR="#5F9EA0">else</FONT></B>
+      <I><FONT COLOR="#B22222">/* Portable sleep for platforms other than Windows. */ </</B>
+        timeout.tv_usec = (curl_timeo % 1000) * 1000;
+    }
+&nbsp;
+    <I><FONT COLOR="#B22222">/* get file descriptors from the transfers */ </FONT></I>
+    mc = <a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>(multi_handle, &amp;fdread, &amp;fdwrite, &amp;fdexcep, &amp;maxfd);
+&nbsp;
+    <B><FONT COLOR="#A020F0">if</FONT></B>(mc != CURLM_OK) {
+      fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;<a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>() failed, code %d.\n&quot;</FONT></B>, mc);
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    }
+&nbsp;
+    <I><FONT COLOR="#B22222">/* On success the value of maxfd is guaranteed to be &gt;= -1. We call
+       select(maxfd + 1, ...); specially in case of (maxfd == -1) there are
+       no fds ready yet so we call select(0, ...) --or Sleep() on Windows--
+       to sleep 100ms, which is the minimum suggested value in the
+       <a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>() doc. */ </FONT></I>
+&nbsp;
+    <B><FONT COLOR="#A020F0">if</FONT></B>(maxfd == -1) {
+#<B ><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">_WIN32</FONT>
+      Sleep(100);
+      rc = 0;
+#<B ><FONT COLOR="#5F9EA0">else</FONT></B>
+      <I><FONT COLOR="#B22222">/* Portable sleep for platforms other than Windows. */ </FONT></I>
+      <B><FONT COLOR="#228B22">struct</FONT></B> timeval wait = { 0, 100 * 1000 }; <I><FONT COLOR="#B22222">/* 100ms */ </FONT></I>
+      rc = select(0, NULL, NULL, NULL, &amp;wait);
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+    }
+    <B><FONT COLOR="#A020F0">else</FONT></B> {
+      <I><FONT COLOR="#B22222">/* Note that on some platforms 'timeout' may be modified by select().
+         If you need access to the original value save a copy beforehand. */ </FONT></I>
+      rc = select(maxfd + 1, &amp;fdread, &amp;fdwrite, &amp;fdexcep, &amp;timeout);
+    }
+&nbsp;
+    <B><FONT COLOR="#A020F0">switch</FONT></B>(rc) {
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">-1</FONT></B>:
+      <I><FONT COLOR="#B22222">/* select error */ </FONT></I>
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">0</FONT></B>:
+    <B><FONT COLOR="#5F9EA0">default</FONT></B>:
+      <I><FONT COLOR="#B22222">/* timeout or readable/writable sockets */ </FONT></I>
+      <a href="https://curl.haxx.se/libcurl/c/curl_multi_perform.html">curl_multi_perform</a>(multi_handle, &amp;still_running);
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    }
+  }
+&nbsp;
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i = 0; i &lt; num_transfers; i++) {
+    <a href="https://curl.haxx.se/libcurl/c/curl_mulFONT></I>
+      <B><FONT COLOR="#228B22">struct</FONT></B> timeval wait = { 0, 100 * 1000 }; <I><FONT COLOR="#B22222">/* 100ms */ </FONT></I>
+      rc = select(0, NULL, NULL, NULL, &amp;wait);
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+    }
+    <B><FONT COLOR="#A020F0">else</FONT></B> {
+      <I><FONT COLOR="#B22222">/* Note that on some platforms 'timeout' may be modified by select().
+         If you need access to the original value save a copy beforehand. */ </FONT></I>
+      rc = select(maxfd + 1, &amp;fdread, &amp;fdwrite, &amp;fdexcep, &amp;timeout);
+    }
+&nbsp;
+    <B><FONT COLOR="#A020F0">switch</FONT></B>(rc) {
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">-1</FONT></B>:
+      <I><FONT COLOR="#B22222">/* select error */ </FONT></I>
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">0</FONT></B>:
+    <B><FONT COLOR="#5F9EA0">default</FONT></B>:
+      <I><FONT COLOR="#B22222">/* timeout or readable/writable sockets */ </FONT></I>
+      <a href="https://curl.haxx.se/libcurl/c/curl_multi_perform.html">curl_multi_perform</a>(multi_handle, &amp;still_running);
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    }
+  }
+&nbsp;
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i = 0; i &lt; num_transfers; i++) {
+    <a href="https://curl.haxx.se/libcurl/c/curl_multi_remove_handle.html">curl_multi_remove_handle</a>(multi_handle, trans[i].easy);
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_cleanup.html">curl_easy_cleanup</a>(trans[i].easy);
+  }
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_multi_cleanup.html">curl_multi_cleanup</a>(multi_handle);
+&nbsp;
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+}
+</PRE>
+</div>
+</div>
+<script defer src="https://www.fastly-insights.com/insights.js?k=8cb1247c-87c2-4af9-9229-768b1990f90b" type="text/javascript"></script>
+</BODY>
+</HTML>
+ti_remove_handle.html">curl_multi_remove_handle</a>(multi_handle, trans[i].easy);
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_cleanup.html">curl_easy_cleanup</a>(trans[i].easy);
+  }
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_multi_cleanup.html">curl_multi_cleanup</a>(multi_handle);
+&nbsp;
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+}
+</PRE>
+</div>
+</div>
+<script defer src="https://www.fastly-insights.com/insights.js?k=8cb1247c-87c2-4af9-9229-768b1990f90b" type="text/javascript"></script>
+</BODY>
+</HTML>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD> <TITLE>libcurl example - http2-download.c</TITLE>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+<link rel="stylesheet" type="text/css" href="https://curl.haxx.se/curl.css">
+<link rel="shortcut icon" href="https://curl.haxx.se/favicon.ico">
+<link rel="icon" href="https://curl.haxx.se/logo/curl-symbol.svg" type="image/svg+xml">
+</HEAD>
+<body bgcolor="#ffffff" text="#000000">
+<div class="main">
+<div class="menu">
+<a href="https://curl.haxx.se/libcurl/c/libcurl.html" class="menuitem" title="Overview">Overview</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-tutorial.html" class="menuitem" title="Tutorial">Tutorial</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-errors.html" class="menuitem" title="Error Codes">Errors</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-env.html" class="menuitem" title="Environment variables ">Environment</a>
+<a href="https://curl.haxx.se/libcurl/c/example.html" class="itemselect">Examples</a>
+<a href="https://curl.haxx.se/libcurl/c/symbols-in-versions.html" class="menuitem" title="In which versions were which symbols introduced">Symbols</a>
+<a href="https://curl.haxx.se/libcurl/c/allfuncs.html" class="menuitem" title="List of all libcurl functions">Index</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-easy.html" class="menuitem" title="Easy interface tutorial">Easy Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-multi.html" class="menuitem" title="Multi Interface tutorial">Multi Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-share.html" class="menuitem" title="Share Interface Tutorial">Share Interface</a>
+</div>
+<div class="contents">
+<div class="where"><a href="https://curl.haxx.se/">curl</a> / <a href="/libcurl/">libcurl</a> / <a href="/libcurl/c/">API</a> / <a href="/libcurl/c/example.html">Examples</a> / <b>http2-download.c</b></div>
+<h1> http2-download.c </h1>
+<div class="relatedbox" style="background-color: rgba(255,255,255,1); opacity: 1;">
+<b>Related:</b>
+<br><a href="https://github.com/curl/curl/issues/new?title=http2-download.c%20example&amp;labels=documentation" target="_new">File a bug about http2-download.c</a>
+<br><a href="https://github.com/curl/curl/blob/master/docs/examples/http2-download.c" target="_new">View http2-download.c in git</a>
+<br><a href="https://github.com/curl/curl/raw/master/docs/examples/http2-download.c">Download http2-download.c raw</a>
+</div>
+<div style="clear: both"/>
+<PRE>
+<I><FONT COLOR="#B22222">/***************************************************************************
+ *                                  _   _ ____  _
+ *  Project                     ___| | | |  _ \| |
+ *                             / __| | | | |_) | |
+ *                            | (__| |_| |  _ &lt;| |___
+ *                             \___|\___/|_| \_\_____|
+ *
+ * Copyright (C) 1998 - 2019, Daniel Stenberg, &lt;daniel@haxx.se&gt;, et al.
+ *
+ * This software is licensed as described in the file COPYING, which
+ * you should have received as part of this distribution. The terms
+ * are also available at https://curl.haxx.se/docs/copyright.html.
+ *
+ * You may opt to use, copy, modify, merge, publish, distribute and/or sell
+ * copies of the Software, and permit persons to whom the Software is
+ * furnished to do so, under the terms of the COPYING file.
+ *
+ * This software is distributed on an &quot;AS IS&quot; basis, WITHOUT WARRANTY OF ANY
+ * KIND, either express or implied.
+ *
+ ***************************************************************************/ </FONT></I>
+<I><FONT COLOR="#B22222">/* &lt;DESC&gt;
+ * Multiplexed HTTP/2 downloads over a single connection
+ * &lt;/DESC&gt;
+ */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>
+&nbsp;
+<I><FONT COLOR="#B22222">/* somewhat unix-specific */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/time.h&gt;</FONT></B>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>
+&nbsp;
+<I><FONT COLOR="#B22222">/* curl stuff */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;curl/curl.h&gt;</FONT></B>
+&nbsp;
+#<B ><FONT COLOR="#5F9EA0">ifndef</FONT></B> <FONT COLOR="#B8860B">CURLPIPE_MULTIPLEX</FONT>
+<I><FONT COLOR="#B22222">/* This little trick will just make sure that we don't enable pipelining for
+   libcurls old enough to not have this symbol. It is _not_ defined to zero in
+   a recent libcurl header. */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">CURLPIPE_MULTIPLEX</FONT> 0
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+&nbsp;
+<B><FONT COLOR="#228B22">struct</FONT></B> transfer {
+  CURL *easy;
+  <B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B> num;
+  FILE *out;
+};
+&nbsp;
+#<B ><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">NUM_HANDLES</FONT> 1000
+&nbsp;
+<B><FONT COLOR="#228B22">static</FONT></B>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">dump</FONT></B>(<B><FONT COLOR="#228B22">const</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> *text, <B><FONT COLOR="#228B22">int</FONT></B> num, <B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> *ptr, size_t size,
+          <B><FONT COLOR="#228B22">char</FONT></B> nohex)
+{
+  size_t i;
+  size_t c;
+&nbsp;
+  <B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B> width = 0x10;
+&nbsp;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(nohex)
+    <I><FONT COLOR="#B22222">/* without the hex output, we can fit more on screen */ </FONT></I>
+    width = 0x40;
+&nbsp;
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;%d %s, %lu bytes (0x%lx)\n&quot;</FONT></B>,
+          num, text, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)size, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)size);
+&nbsp;
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i = 0; i&lt;size; i += width) {
+&nbsp;
+    fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;%4.4lx: &quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)i);
+&nbsp;
+    <B><FONT COLOR="#A020F0">if</FONT></B>(!nohex) {
+      <I><FONT COLOR="#B22222">/* hex not disabled, show it */ </FONT></I>
+      <B><FONT COLOR="#A020F0">for</FONT></B>(c = 0; c &lt; width; c++)
+        <B><FONT COLOR="#A020F0">if</FONT></B>(i + c &lt; size)
+          fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;%02x &quot;</FONT></B>, ptr[i + c]);
+        <B><FONT COLOR="#A020F0">else</FONT></B>
+          fputs(<B><FONT COLOR="#BC8F8F">&quot;   &quot;</FONT></B>, stderr);
+    }
+&nbsp;
+    <B><FONT COLOR="#A020F0">for</FONT></B>(c = 0; (c &lt; width) &amp;&amp; (i + c &lt; size); c++) {
+      <I><FONT COLOR="#B22222">/* check for 0D0A; if found, skip past and start a new line of output */ </FONT></I>
+      <B><FONT COLOR="#A020F0">if</FONT></B>(nohex &amp;&amp; (i + c + 1 &lt; size) &amp;&amp; ptr[i + c] == 0x0D &amp;&amp;
+         ptr[i + c + 1] == 0x0A) {
+        i += (c + 2 - width);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      }
+      fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;%c&quot;</FONT></B>,
+              (ptr[i + c] &gt;= 0x20) &amp;&amp; (ptr[i + c]&lt;0x80)?ptr[i + c]:<B><FONT COLOR="#BC8F8F">'.'</FONT></B>);
+      <I><FONT COLOR="#B22222">/* check again for 0D0A, to avoid an extra \n if it's at width */ </FONT></I>
+      <B><FONT COLOR="#A020F0">if</FONT></B>(nohex &amp;&amp; (i + c + 2 &lt; size) &amp;&amp; ptr[i + c + 1] == 0x0D &amp;&amp;
+         ptr[i + c + 2] == 0x0A) {
+        i += (c + 3 - width);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      }
+    }
+    fputc(<B><FONT COLOR="#BC8F8F">'\n'</FONT></B>, stderr); <I><FONT COLOR="#B22222">/* newline */ </FONT></I>
+  }
+}
+&nbsp;
+<B><FONT COLOR="#228B22">static</FONT></B>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">my_trace</FONT></B>(CURL *handle, curl_infotype type,
+             <B><FONT COLOR="#228B22">char</FONT></B> *data, size_t size,
+             <B><FONT COLOR="#228B22">void</FONT></B> *userp)
+{
+  <B><FONT COLOR="#228B22">const</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> *text;
+  <B><FONT COLOR="#228B22">struct</FONT></B> transfer *t = (<B><FONT COLOR="#228B22">struct</FONT></B> transfer *)userp;
+  <B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B> num = t-&gt;num;
+  (<B><FONT COLOR="#228B22">void</FONT></B>)handle; <I><FONT COLOR="#B22222">/* prevent compiler warning */ </FONT></I>
+&nbsp;
+  <B><FONT COLOR="#A020F0">switch</FONT></B>(type) {
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0"><a href="https://curl.haxx.se/libcurl/c/CURLINFO_TEXT.html">CURLINFO_TEXT</a></FONT></B>:
+    fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;== %u Info: %s&quot;</FONT></B>, num, data);
+    <I><FONT COLOR="#B22222">/* FALLTHROUGH */ </FONT></I>
+  <B><FONT COLOR="#5F9EA0">default</FONT></B>: <I><FONT COLOR="#B22222">/* in case a new one is introduced to shock us */ </FONT></I>
+    <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+&nbsp;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0"><a href="https://curl.haxx.se/libcurl/c/CURLINFO_HEADER_OUT.html">CURLINFO_HEADER_OUT</a></FONT></B>:
+    text = <B><FONT COLOR="#BC8F8F">&quot;=&gt; Send header&quot;</FONT></B>;
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0"><a href="https://curl.haxx.se/libcurl/c/CURLINFO_DATA_OUT.html">CURLINFO_DATA_OUT</a></FONT></B>:
+    text = <B><FONT COLOR="#BC8F8F">&quot;=&gt; Send data&quot;</FONT></B>;
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0"><a href="https://curl.haxx.se/libcurl/c/CURLINFO_SSL_DATA_OUT.html">CURLINFO_SSL_DATA_OUT</a></FONT></B>:
+    text = <B><FONT COLOR="#BC8F8F">&quot;=&gt; Send SSL data&quot;</FONT></B>;
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0"><a href="https://curl.haxx.se/libcurl/c/CURLINFO_HEADER_IN.html">CURLINFO_HEADER_IN</a></FONT></B>:
+    text = <B><FONT COLOR="#BC8F8F">&quot;&lt;= Recv header&quot;</FONT></B>;
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0"><a href="https://curl.haxx.se/libcurl/c/CURLINFO_DATA_IN.html">CURLINFO_DATA_IN</a></FONT></B>:
+    text = <B><FONT COLOR="#BC8F8F">&quot;&lt;= Recv data&quot;</FONT></B>;
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0"><a href="https://curl.haxx.se/libcurl/c/CURLINFO_SSL_DATA_IN.html">CURLINFO_SSL_DATA_IN</a></FONT></B>:
+    text = <B><FONT COLOR="#BC8F8F">&quot;&lt;= Recv SSL data&quot;</FONT></B>;
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  }
+&nbsp;
+  dump(text, num, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> *)data, size, 1);
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+}
+&nbsp;
+<B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">setup</FONT></B>(<B><FONT COLOR="#228B22">struct</FONT></B> transfer *t, <B><FONT COLOR="#228B22">int</FONT></B> num)
+{
+  <B><FONT COLOR="#228B22">char</FONT></B> filename[128];
+  CURL *hnd;
+&nbsp;
+  hnd = t-&gt;easy = <a href="https://curl.haxx.se/libcurl/c/curl_easy_init.html">curl_easy_init</a>();
+&nbsp;
+  snprintf(filename, 128, <B><FONT COLOR="#BC8F8F">&quot;dl-%d&quot;</FONT></B>, num);
+&nbsp;
+  t-&gt;out = fopen(filename, <B><FONT COLOR="#BC8F8F">&quot;wb&quot;</FONT></B>);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* write to this file */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_WRITEDATA.html">CURLOPT_WRITEDATA</a>, t-&gt;out);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* set the same URL */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_URL.html">CURLOPT_URL</a>, <B><FONT COLOR="#BC8F8F">&quot;https://localhost:8443/index.html&quot;</FONT></B>);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* please be verbose */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_VERBOSE.html">CURLOPT_VERBOSE</a>, 1L);
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_DEBUGFUNCTION.html">CURLOPT_DEBUGFUNCTION</a>, my_trace);
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_DEBUGDATA.html">CURLOPT_DEBUGDATA</a>, t);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* HTTP/2 please */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_HTTP_VERSION.html">CURLOPT_HTTP_VERSION</a>, CURL_HTTP_VERSION_2_0);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* we use a self-signed test server, skip verification during debugging */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYPEER.html">CURLOPT_SSL_VERIFYPEER</a>, 0L);
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYHOST.html">CURLOPT_SSL_VERIFYHOST</a>, 0L);
+&nbsp;
+#<B ><FONT COLOR="#5F9EA0">if</FONT></B> (<FONT COLOR="#B8860B">CURLPIPE_MULTIPLEX</FONT> &gt; 0)
+  <I><FONT COLOR="#B22222">/* wait for pipe connection to confirm */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(hnd, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_PIPEWAIT.html">CURLOPT_PIPEWAIT</a>, 1L);
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+}
+&nbsp;
+<I><FONT COLOR="#B22222">/*
+ * Download many transfers over HTTP/2, using the same connection!
+ */ </FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> **argv)
+{
+  <B><FONT COLOR="#228B22">struct</FONT></B> transfer trans[NUM_HANDLES];
+  CURLM *multi_handle;
+  <B><FONT COLOR="#228B22">int</FONT></B> i;
+  <B><FONT COLOR="#228B22">int</FONT></B> still_running = 0; <I><FONT COLOR="#B22222">/* keep number of running handles */ </FONT></I>
+  <B><FONT COLOR="#228B22">int</FONT></B> num_transfers;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(argc &gt; 1) {
+    <I><FONT COLOR="#B22222">/* if given a number, do that many transfers */ </FONT></I>
+    num_transfers = atoi(argv[1]);
+    <B><FONT COLOR="#A020F0">if</FONT></B>((num_transfers &lt; 1) || (num_transfers &gt; NUM_HANDLES))
+      num_transfers = 3; <I><FONT COLOR="#B22222">/* a suitable low default */ </FONT></I>
+  }
+  <B><FONT COLOR="#A020F0">else</FONT></B>
+    num_transfers = 3; <I><FONT COLOR="#B22222">/* suitable default */ </FONT></I>
+&nbsp;
+  <I><FONT COLOR="#B22222">/* init a multi stack */ </FONT></I>
+  multi_handle = <a href="https://curl.haxx.se/libcurl/c/curl_multi_init.html">curl_multi_init</a>();
+&nbsp;
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i = 0; i &lt; num_transfers; i++) {
+    setup(&amp;trans[i], i);
+&nbsp;
+    <I><FONT COLOR="#B22222">/* add the individual transfer */ </FONT></I>
+    <a href="https://curl.haxx.se/libcurl/c/curl_multi_add_handle.html">curl_multi_add_handle</a>(multi_handle, trans[i].easy);
+  }
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_multi_setopt.html">curl_multi_setopt</a>(multi_handle, <a href="https://curl.haxx.se/libcurl/c/CURLMOPT_PIPELINING.html">CURLMOPT_PIPELINING</a>, CURLPIPE_MULTIPLEX);
+&nbsp;
+  <I><FONT COLOR="#B22222">/* we start some action by calling perform right away */ </FONT></I>
+  <a href="https://curl.haxx.se/libcurl/c/curl_multi_perform.html">curl_multi_perform</a>(multi_handle, &amp;still_running);
+&nbsp;
+  <B><FONT COLOR="#A020F0">while</FONT></B>(still_running) {
+    <B><FONT COLOR="#228B22">struct</FONT></B> timeval timeout;
+    <B><FONT COLOR="#228B22">int</FONT></B> rc; <I><FONT COLOR="#B22222">/* select() return code */ </FONT></I>
+    CURLMcode mc; <I><FONT COLOR="#B22222">/* <a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>() return code */ </FONT></I>
+&nbsp;
+    fd_set fdread;
+    fd_set fdwrite;
+    fd_set fdexcep;
+    <B><FONT COLOR="#228B22">int</FONT></B> maxfd = -1;
+&nbsp;
+    <B><FONT COLOR="#228B22">long</FONT></B> curl_timeo = -1;
+&nbsp;
+    FD_ZERO(&amp;fdread);
+    FD_ZERO(&amp;fdwrite);
+    FD_ZERO(&amp;fdexcep);
+&nbsp;
+    <I><FONT COLOR="#B22222">/* set a suitable timeout to play around with */ </FONT></I>
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+&nbsp;
+    <a href="https://curl.haxx.se/libcurl/c/curl_multi_timeout.html">curl_multi_timeout</a>(multi_handle, &amp;curl_timeo);
+    <B><FONT COLOR="#A020F0">if</FONT></B>(curl_timeo &gt;= 0) {
+      timeout.tv_sec = curl_timeo / 1000;
+      <B><FONT COLOR="#A020F0">if</FONT></B>(timeout.tv_sec &gt; 1)
+        timeout.tv_sec = 1;
+      <B><FONT COLOR="#A020F0">else</FONT></B>
+        timeout.tv_usec = (curl_timeo % 1000) * 1000;
+    }
+&nbsp;
+    <I><FONT COLOR="#B22222">/* get file descriptors from the transfers */ </FONT></I>
+    mc = <a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>(multi_handle, &amp;fdread, &amp;fdwrite, &amp;fdexcep, &amp;maxfd);
+&nbsp;
+    <B><FONT COLOR="#A020F0">if</FONT></B>(mc != CURLM_OK) {
+      fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;<a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>() failed, code %d.\n&quot;</FONT></B>, mc);
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    }
+&nbsp;
+    <I><FONT COLOR="#B22222">/* On success the value of maxfd is guaranteed to be &gt;= -1. We call
+       select(maxfd + 1, ...); specially in case of (maxfd == -1) there are
+       no fds ready yet so we call select(0, ...) --or Sleep() on Windows--
+       to sleep 100ms, which is the minimum suggested value in the
+       <a href="https://curl.haxx.se/libcurl/c/curl_multi_fdset.html">curl_multi_fdset</a>() doc. */ </FONT></I>
+&nbsp;
+    <B><FONT COLOR="#A020F0">if</FONT></B>(maxfd == -1) {
+#<B ><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">_WIN32</FONT>
+      Sleep(100);
+      rc = 0;
+#<B ><FONT COLOR="#5F9EA0">else</FONT></B>
+      <I><FONT COLOR="#B22222">/* Portable sleep for platforms other than Windows. */ </FONT></I>
+      <B><FONT COLOR="#228B22">struct</FONT></B> timeval wait = { 0, 100 * 1000 }; <I><FONT COLOR="#B22222">/* 100ms */ </FONT></I>
+      rc = select(0, NULL, NULL, NULL, &amp;wait);
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+    }
+    <B><FONT COLOR="#A020F0">else</FONT></B> {
+      <I><FONT COLOR="#B22222">/* Note that on some platforms 'timeout' may be modified by select().
+         If you need access to the original value save a copy beforehand. */ </FONT></I>
+      rc = select(maxfd + 1, &amp;fdread, &amp;fdwrite, &amp;fdexcep, &amp;timeout);
+    }
+&nbsp;
+    <B><FONT COLOR="#A020F0">switch</FONT></B>(rc) {
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">-1</FONT></B>:
+      <I><FONT COLOR="#B22222">/* select error */ </FONT></I>
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">0</FONT></B>:
+    <B><FONT COLOR="#5F9EA0">default</FONT></B>:
+      <I><FONT COLOR="#B22222">/* timeout or readable/writable sockets */ </FONT></I>
+      <a href="https://curl.haxx.se/libcurl/c/curl_multi_perform.html">curl_multi_perform</a>(multi_handle, &amp;still_running);
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    }
+  }
+&nbsp;
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i = 0; i &lt; num_transfers; i++) {
+    <a href="https://curl.haxx.se/libcurl/c/curl_multi_remove_handle.html">curl_multi_remove_handle</a>(multi_handle, trans[i].easy);
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_cleanup.html">curl_easy_cleanup</a>(trans[i].easy);
+  }
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_multi_cleanup.html">curl_multi_cleanup</a>(multi_handle);
+&nbsp;
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+}
+</PRE>
+</div>
+</div>
+<script defer src="https://www.fastly-insights.com/insights.js?k=8cb1247c-87c2-4af9-9229-768b1990f90b" type="text/javascript"></script>
+</BODY>
+</HTML>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD> <TITLE>libcurl example - https.c</TITLE>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+<link rel="stylesheet" type="text/css" href="https://curl.haxx.se/curl.css">
+<link rel="shortcut icon" href="https://curl.haxx.se/favicon.ico">
+<link rel="icon" href="https://curl.haxx.se/logo/curl-symbol.svg" type="image/svg+xml">
+</HEAD>
+<body bgcolor="#ffffff" text="#000000">
+<div class="main">
+<div class="menu">
+<a href="https://curl.haxx.se/libcurl/c/libcurl.html" class="menuitem" title="Overview">Overview</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-tutorial.html" class="menuitem" title="Tutorial">Tutorial</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-errors.html" class="menuitem" title="Error Codes">Errors</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-env.html" class="menuitem" title="Environment variables ">Environment</a>
+<a href="https://curl.haxx.se/libcurl/c/example.html" class="itemselect">Examples</a>
+<a href="https://curl.haxx.se/libcurl/c/symbols-in-versions.html" class="menuitem" title="In which versions were which symbols introduced">Symbols</a>
+<a href="https://curl.haxx.se/libcurl/c/allfuncs.html" class="menuitem" title="List of all libcurl functions">Index</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-easy.html" class="menuitem" title="Easy interface tutorial">Easy Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-multi.html" class="menuitem" title="Multi Interface tutorial">Multi Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-share.html" class="menuitem" title="Share Interface Tutorial">Share Interface</a>
+</div>
+<div class="contents">
+<div class="where"><a href="https://curl.haxx.se/">curl</a> / <a href="/libcurl/">libcurl</a> / <a href="/libcurl/c/">API</a> / <a href="/libcurl/c/example.html">Examples</a> / <b>https.c</b></div>
+<h1> https.c </h1>
+<div class="relatedbox" style="background-color: rgba(255,255,255,1); opacity: 1;">
+<b>Related:</b>
+<br><a href="https://github.com/curl/curl/issues/new?title=https.c%20example&amp;labels=documentation" target="_new">File a bug about https.c</a>
+<br><a href="https://github.com/curl/curl/blob/master/docs/examples/https.c" target="_new">View https.c in git</a>
+<br><a href="https://github.com/curl/curl/raw/master/docs/examples/https.c">Download https.c raw</a>
+</div>
+<div style="clear: both"/>
+<PRE>
+<I><FONT COLOR="#B22222">/***************************************************************************
+ *                                  _   _ ____  _
+ *  Project                     ___| | | |  _ \| |
+ *                             / __| | | | |_) | |
+ *                            | (__| |_| |  _ &lt;| |___
+ *                             \___|\___/|_| \_\_____|
+ *
+ * Copyright (C) 1998 - 2019, Daniel Stenberg, &lt;daniel@haxx.se&gt;, et al.
+ *
+ * This software is licensed as described in the file COPYING, which
+ * you should have received as part of this distribution. The terms
+ * are also available at https://curl.haxx.se/docs/copyright.html.
+ *
+ * You may opt to use, copy, modify, merge, publish, distribute and/or sell
+ * copies of the Software, and permit persons to whom the Software is
+ * furnished to do so, under the terms of the COPYING file.
+ *
+ * This software is distributed on an &quot;AS IS&quot; basis, WITHOUT WARRANTY OF ANY
+ * KIND, either express or implied.
+ *
+ ***************************************************************************/ </FONT></I>
+<I><FONT COLOR="#B22222">/* &lt;DESC&gt;
+ * Simple HTTPS GET
+ * &lt;/DESC&gt;
+ */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;curl/curl.h&gt;</FONT></B>
+&nbsp;
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B>)
+{
+  CURL *curl;
+  CURLcode res;
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_global_init.html">curl_global_init</a>(CURL_GLOBAL_DEFAULT);
+&nbsp;
+  curl = <a href="https://curl.haxx.se/libcurl/c/curl_easy_init.html">curl_easy_init</a>();
+  <B><FONT COLOR="#A020F0">if</FONT></B>(curl) {
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(curl, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_URL.html">CURLOPT_URL</a>, <B><FONT COLOR="#BC8F8F">&quot;https://example.com/&quot;</FONT></B>);
+&nbsp;
+#<B ><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">SKIP_PEER_VERIFICATION</FONT>
+    <I><FONT COLOR="#B22222">/*
+     * If you want to connect to a site who isn't using a certificate that is
+     * signed by one of the certs in the CA bundle you have, you can skip the
+     * verification of the server's certificate. This makes the connection
+     * A LOT LESS SECURE.
+     *
+     * If you have a CA cert for the server stored someplace else than in the
+     * default bundle, then the <a href="https://curl.haxx.se/libcurl/c/CURLOPT_CAPATH.html">CURLOPT_CAPATH</a> option might come handy for
+     * you.
+     */ </FONT></I>
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(curl, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYPEER.html">CURLOPT_SSL_VERIFYPEER</a>, 0L);
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+&nbsp;
+#<B ><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">SKIP_HOSTNAME_VERIFICATION</FONT>
+    <I><FONT COLOR="#B22222">/*
+     * If the site you're connecting to uses a different host name that what
+     * they have mentioned in their server certificate's commonName (or
+     * subjectAltName) fields, libcurl will refuse to connect. You can skip
+     * this check, but this will make the connection less secure.
+     */ </FONT></I>
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(curl, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYHOST.html">CURLOPT_SSL_VERIFYHOST</a>, 0L);
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+&nbsp;
+    <I><FONT COLOR="#B22222">/* Perform the request, res will get the return code */ </FONT></I>
+    res = <a href="https://curl.haxx.se/libcurl/c/curl_easy_perform.html">curl_easy_perform</a>(curl);
+    <I><FONT COLOR="#B22222">/* Check for errors */ </FONT></I>
+    <B><FONT COLOR="#A020F0">if</FONT></B>(res != CURLE_OK)
+      fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;<a href="https://curl.haxx.se/libcurl/c/curl_easy_perform.html">curl_easy_perform</a>() failed: %s\n&quot;</FONT></B>,
+              <a href="https://curl.haxx.se/libcurl/c/curl_easy_strerror.html">curl_easy_strerror</a>(res));
+&nbsp;
+    <I><FONT COLOR="#B22222">/* always cleanup */ </FONT></I>
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_cleanup.html">curl_easy_cleanup</a>(curl);
+  }
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_global_cleanup.html">curl_global_cleanup</a>();
+&nbsp;
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+}
+</PRE>
+</div>
+</div>
+<script defer src="https://www.fastly-insights.com/insights.js?k=8cb1247c-87c2-4af9-9229-768b1990f90b" type="text/javascript"></script>
+</BODY>
+</HTML>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD> <TITLE>libcurl example - https.c</TITLE>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+<link rel="stylesheet" type="text/css" href="https://curl.haxx.se/curl.css">
+<link rel="shortcut icon" href="https://curl.haxx.se/favicon.ico">
+<link rel="icon" href="https://curl.haxx.se/logo/curl-symbol.svg" type="image/svg+xml">
+</HEAD>
+<body bgcolor="#ffffff" text="#000000">
+<div class="main">
+<div class="menu">
+<a href="https://curl.haxx.se/libcurl/c/libcurl.html" class="menuitem" title="Overview">Overview</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-tutorial.html" class="menuitem" title="Tutorial">Tutorial</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-errors.html" class="menuitem" title="Error Codes">Errors</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-env.html" class="menuitem" title="Environment variables ">Environment</a>
+<a href="https://curl.haxx.se/libcurl/c/example.html" class="itemselect">Examples</a>
+<a href="https://curl.haxx.se/libcurl/c/symbols-in-versions.html" class="menuitem" title="In which versions were which symbols introduced">Symbols</a>
+<a href="https://curl.haxx.se/libcurl/c/allfuncs.html" class="menuitem" title="List of all libcurl functions">Index</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-easy.html" class="menuitem" title="Easy interface tutorial">Easy Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-multi.html" class="menuitem" title="Multi Interface tutorial">Multi Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-share.html" class="menuitem" title="Share Interface Tutorial">Share Interface</a>
+</div>
+<div class="contents">
+<div class="where"><a href="https://curl.haxx.se/">curl</a> / <a href="/libcurl/">libcurl</a> / <a href="/libcurl/c/">API</a> / <a href="/libcurl/c/example.html">Examples</a> / <b>https.c</b></div>
+<h1> https.c </h1>
+<div class="relatedbox" style="background-color: rgba(255,255,255,1); opacity: 1;">
+<b>Related:</b>
+<br><a href="https://github.com/curl/curl/issues/new?title=https.c%20example&amp;labels=documentation" target="_new">File a bug about https.c</a>
+<br><a href="https://github.com/curl/curl/blob/master/docs/examples/https.c" target="_new">View https.c in git</a>
+<br><a href="https://github.com/curl/curl/raw/master/docs/examples/https.c">Download https.c raw</a>
+</div>
+<div style="clear: both"/>
+<PRE>
+<I><FONT COLOR="#B22222">/***************************************************************************
+ *                                  _   _ ____  _
+ *  Project                     ___| | | |  _ \| |
+ *                             / __| | | | |_) | |
+ *                            | (__| |_| |  _ &lt;| |___
+ *                             \___|\___/|_| \_\_____|
+ *
+ * Copyright (C) 1998 - 2019, Daniel Stenberg, &lt;daniel@haxx.se&gt;, et al.
+ *
+ * This software is licensed as described in the file COPYING, which
+ * you should have received as part of this distribution. The terms
+ * are also available at https://curl.haxx.se/docs/copyright.html.
+ *
+ * You may opt to use, copy, modify, merge, publish, distribute and/or sell
+ * copies of the Software, and permit persons to whom the Software is
+ * furnished to do so, under the terms of the COPYING file.
+ *
+ * This software is distributed on an &quot;AS IS&quot; basis, WITHOUT WARRANTY OF ANY
+ * KIND, either express or implied.
+ *
+ ***************************************************************************/ </FONT></I>
+<I><FONT COLOR="#B22222">/* &lt;DESC&gt;
+ * Simple HTTPS GET
+ * &lt;/DESC&gt;
+ */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;curl/curl.h&gt;</FONT></B>
+&nbsp;
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B>)
+{
+  CURL *curl;
+  CURLcode res;
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_global_init.html">curl_global_init</a>(CURL_GLOBAL_DEFAULT);
+&nbsp;
+  curl = <a href="https://curl.haxx.se/libcurl/c/curl_easy_init.html">curl_easy_init</a>();
+  <B><FONT COLOR="#A020F0">if</FONT></B>(curl) {
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(curl, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_URL.html">CURLOPT_URL</a>, <B><FONT COLOR="#BC8F8F">&quot;https://example.com/&quot;</FONT></B>);
+&nbsp;
+#<B ><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">SKIP_PEER_VERIFICATION</FONT>
+    <I><FONT COLOR="#B22222">/*
+     * If you want to connect to a site who isn't using a certificate that is
+     * signed by one of the certs in the CA bundle you have, you can skip the
+     * verification of the server's certificate. This makes the connection
+     * A LOT LESS SECURE.
+     *
+     * If you have a CA cert for the server stored someplace else than in the
+     * default bundle, then the <a href="https://curl.haxx.se/libcurl/c/CURLOPT_CAPATH.html">CURLOPT_CAPATH</a> option might come handy for
+     * you.
+     */ </FONT></I>
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(curl, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYPEER.html">CURLOPT_SSL_VERIFYPEER</a>, 0L);
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+&nbsp;
+#<B ><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">SKIP_HOSTNAME_VERIFICATION</FONT>
+    <I><FONT COLOR="#B22222">/*
+     * If the site you're connecting to uses a different host name that what
+     * they have mentioned in their server certificate's commonName (or
+     * subjectAltName) fields, libcurl will refuse to connect. You can skip
+     * this check, but this will make the connection less secure.
+     */ </FONT></I>
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(curl, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYHOST.html">CURLOPT_SSL_VERIFYHOST</a>, 0L);
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+&nbsp;
+    <I><FONT COLOR="#B22222">/* Perform the request, res will get the return code */ </FONT></I>
+    res = <a href="https://curl.haxx.se/libcurl/c/curl_easy_perform.html">curl_easy_perform</a>(curl);
+    <I><FONT COLOR="#B22222">/* Check for errors */ </FONT></I>
+    <B><FONT COLOR="#A020F0">if</FONT></B>(res != CURLE_OK)
+      fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;<a href="https://curl.haxx.se/libcurl/c/curl_easy_perform.html">curl_easy_perform</a>() failed: %s\n&quot;</FONT></B>,
+              <a href="https://curl.haxx.se/libcurl/c/curl_easy_strerror.html">curl_easy_strerror</a>(res));
+&nbsp;
+    <I><FONT COLOR="#B22222">/* always cleanup */ </FONT></I>
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_cleanup.html">curl_easy_cleanup</a>(curl);
+  }
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_global_cleanup.html">curl_global_cleanup</a>();
+&nbsp;
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+}
+</PRE>
+</div>
+</div>
+<script defer src="https://www.fastly-insights.com/insights.js?k=8cb1247c-87c2-4af9-9229-768b1990f90b" type="text/javascript"></script>
+</BODY>
+</HTML>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD> <TITLE>libcurl example - https.c</TITLE>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+<link rel="stylesheet" type="text/css" href="https://curl.haxx.se/curl.css">
+<link rel="shortcut icon" href="https://curl.haxx.se/favicon.ico">
+<link rel="icon" href="https://curl.haxx.se/logo/curl-symbol.svg" type="image/svg+xml">
+</HEAD>
+<body bgcolor="#ffffff" text="#000000">
+<div class="main">
+<div class="menu">
+<a href="https://curl.haxx.se/libcurl/c/libcurl.html" class="menuitem" title="Overview">Overview</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-tutorial.html" class="menuitem" title="Tutorial">Tutorial</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-errors.html" class="menuitem" title="Error Codes">Errors</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-env.html" class="menuitem" title="Environment variables ">Environment</a>
+<a href="https://curl.haxx.se/libcurl/c/example.html" class="itemselect">Examples</a>
+<a href="https://curl.haxx.se/libcurl/c/symbols-in-versions.html" class="menuitem" title="In which versions were which symbols introduced">Symbols</a>
+<a href="https://curl.haxx.se/libcurl/c/allfuncs.html" class="menuitem" title="List of all libcurl functions">Index</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-easy.html" class="menuitem" title="Easy interface tutorial">Easy Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-multi.html" class="menuitem" title="Multi Interface tutorial">Multi Interface</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-share.html" class="menuitem" title="Share Interface Tutorial">Share Interface</a>
+</div>
+<div class="contents">
+<div class="where"><a href="https://curl.haxx.se/">curl</a> / <a href="/libcurl/">libcurl</a> / <a href="/libcurl/c/">API</a> / <a href="/libcurl/c/example.html">Examples</a> / <b>https.c</b></div>
+<h1> https.c </h1>
+<div class="relatedbox" style="background-color: rgba(255,255,255,1); opacity: 1;">
+<b>Related:</b>
+<br><a href="https://github.com/curl/curl/issues/new?title=https.c%20example&amp;labels=documentation" target="_new">File a bug about https.c</a>
+<br><a href="https://github.com/curl/curl/blob/master/docs/examples/https.c" target="_new">View https.c in git</a>
+<br><a href="https://github.com/curl/curl/raw/master/docs/examples/https.c">Download https.c raw</a>
+</div>
+<div style="clear: both"/>
+<PRE>
+<I><FONT COLOR="#B22222">/***************************************************************************
+ *                                  _   _ ____  _
+ *  Project                     ___| | | |  _ \| |
+ *                             / __| | | | |_) | |
+ *                            | (__| |_| |  _ &lt;| |___
+ *                             \___|\___/|_| \_\_____|
+ *
+ * Copyright (C) 1998 - 2019, Daniel Stenberg, &lt;daniel@haxx.se&gt;, et al.
+ *
+ * This software is licensed as described in the file COPYING, which
+ * you should have received as part of this distribution. The terms
+ * are also available at https://curl.haxx.se/docs/copyright.html.
+ *
+ * You may opt to use, copy, modify, merge, publish, distribute and/or sell
+ * copies of the Software, and permit persons to whom the Software is
+ * furnished to do so, under the terms of the COPYING file.
+ *
+ * This software is distributed on an &quot;AS IS&quot; basis, WITHOUT WARRANTY OF ANY
+ * KIND, either express or implied.
+ *
+ ***************************************************************************/ </FONT></I>
+<I><FONT COLOR="#B22222">/* &lt;DESC&gt;
+ * Simple HTTPS GET
+ * &lt;/DESC&gt;
+ */ </FONT></I>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>
+#<B ><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;curl/curl.h&gt;</FONT></B>
+&nbsp;
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B>)
+{
+  CURL *curl;
+  CURLcode res;
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_global_init.html">curl_global_init</a>(CURL_GLOBAL_DEFAULT);
+&nbsp;
+  curl = <a href="https://curl.haxx.se/libcurl/c/curl_easy_init.html">curl_easy_init</a>();
+  <B><FONT COLOR="#A020F0">if</FONT></B>(curl) {
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(curl, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_URL.html">CURLOPT_URL</a>, <B><FONT COLOR="#BC8F8F">&quot;https://example.com/&quot;</FONT></B>);
+&nbsp;
+#<B ><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">SKIP_PEER_VERIFICATION</FONT>
+    <I><FONT COLOR="#B22222">/*
+     * If you want to connect to a site who isn't using a certificate that is
+     * signed by one of the certs in the CA bundle you have, you can skip the
+     * verification of the server's certificate. This makes the connection
+     * A LOT LESS SECURE.
+     *
+     * If you have a CA cert for the server stored someplace else than in the
+     * default bundle, then the <a href="https://curl.haxx.se/libcurl/c/CURLOPT_CAPATH.html">CURLOPT_CAPATH</a> option might come handy for
+     * you.
+     */ </FONT></I>
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(curl, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYPEER.html">CURLOPT_SSL_VERIFYPEER</a>, 0L);
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+&nbsp;
+#<B ><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">SKIP_HOSTNAME_VERIFICATION</FONT>
+    <I><FONT COLOR="#B22222">/*
+     * If the site you're connecting to uses a different host name that what
+     * they have mentioned in their server certificate's commonName (or
+     * subjectAltName) fields, libcurl will refuse to connect. You can skip
+     * this check, but this will make the connection less secure.
+     */ </FONT></I>
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>(curl, <a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYHOST.html">CURLOPT_SSL_VERIFYHOST</a>, 0L);
+#<B ><FONT COLOR="#5F9EA0">endif</FONT></B>
+&nbsp;
+    <I><FONT COLOR="#B22222">/* Perform the request, res will get the return code */ </FONT></I>
+    res = <a href="https://curl.haxx.se/libcurl/c/curl_easy_perform.html">curl_easy_perform</a>(curl);
+    <I><FONT COLOR="#B22222">/* Check for errors */ </FONT></I>
+    <B><FONT COLOR="#A020F0">if</FONT></B>(res != CURLE_OK)
+      fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;<a href="https://curl.haxx.se/libcurl/c/curl_easy_perform.html">curl_easy_perform</a>() failed: %s\n&quot;</FONT></B>,
+              <a href="https://curl.haxx.se/libcurl/c/curl_easy_strerror.html">curl_easy_strerror</a>(res));
+&nbsp;
+    <I><FONT COLOR="#B22222">/* always cleanup */ </FONT></I>
+    <a href="https://curl.haxx.se/libcurl/c/curl_easy_cleanup.html">curl_easy_cleanup</a>(curl);
+  }
+&nbsp;
+  <a href="https://curl.haxx.se/libcurl/c/curl_global_cleanup.html">curl_global_cleanup</a>();
+&nbsp;
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+}
+</PRE>
+</div>
+</div>
+<script defer src="https://www.fastly-insights.com/insights.js?k=8cb1247c-87c2-4af9-9229-768b1990f90b" type="text/javascript"></script>
+</BODY>
+</HTML>

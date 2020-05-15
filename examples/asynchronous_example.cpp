@@ -1,6 +1,6 @@
 #include <iostream>
 #include <memory>
-#include <array>
+#include <list>
 #include <algorithm>
 
 #include "utils.h"
