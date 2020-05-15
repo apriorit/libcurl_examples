@@ -1,13 +1,13 @@
 #include <memory>
 #include <iostream>
-#include <array>
+#include <list>
 #include <algorithm>
 
 #include "utils.h"
 
 int download_synchronous(void)
 {
-    std::array<EasyHandle, 3> handles;
+    std::list<EasyHandle> handles(3);
 
     /* init easy stacks */
     try
@@ -19,17 +19,13 @@ int download_synchronous(void)
         std::cerr << ex.what() << std::endl;
         return -1;
     }
-    /* set options */
-    curl_easy_setopt(handles[0].get(), CURLOPT_URL, "https://curl.haxx.se/libcurl/c/https.html");
-    curl_easy_setopt(handles[1].get(), CURLOPT_URL, "https://curl.haxx.se/libcurl/c/multi-double.html");
-    curl_easy_setopt(handles[2].get(), CURLOPT_URL, "https://curl.haxx.se/libcurl/c/http2-download.html");
-std::for_each(handles.begin(), handles.end(), [](auto& handle) {
-    set_ssl(handle.get()); 
-    to_memory(handle.get()); 
-});
 
     for (auto& handle : handles)
     {
+        /* set options */
+        curl_easy_setopt(handle.get(), CURLOPT_URL, "https://curl.haxx.se/libcurl/c/https.html"); 
+        set_ssl(handle.get()); 
+        save_to_file(handle.get()); 
         /* Perform the request, res will get the return code */
         auto res = curl_easy_perform(handle.get());
         /* Check for errors */

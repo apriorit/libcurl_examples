@@ -32,17 +32,15 @@ int download_multiplexing(void)
         std::cerr << ex.what() << std::endl;
         return -1;
     }
-    /* set options */
-    curl_easy_setopt(handles[0].get(), CURLOPT_URL, "https://curl.haxx.se/libcurl/c/https.html");
-    curl_easy_setopt(handles[1].get(), CURLOPT_URL, "https://curl.haxx.se/libcurl/c/multi-double.html");
-    curl_easy_setopt(handles[2].get(), CURLOPT_URL, "https://curl.haxx.se/libcurl/c/http2-download.html");
-    std::for_each(handles.begin(), handles.end(), [](auto& handle) {
-        set_ssl(handle.get());
-        to_memory(handle.get());
-    });
 
-    /* add the individual transfers */
-    std::for_each(handles.begin(), handles.end(), [&multi_handle](auto& handle) {curl_multi_add_handle(multi_handle.get(), handle.get()); });
+    for (auto& handle : handles)
+    {
+        curl_easy_setopt(handle.get(), CURLOPT_URL, "https://curl.haxx.se/libcurl/c/http2-download.html");
+        set_ssl(handle.get());
+        save_to_file(handle.get());
+        /* add the individual transfers */
+        curl_multi_add_handle(multi_handle.get(), handle.get());
+    }
 
     curl_multi_setopt(multi_handle.get(), CURLMOPT_PIPELINING, CURLPIPE_MULTIPLEX);
 

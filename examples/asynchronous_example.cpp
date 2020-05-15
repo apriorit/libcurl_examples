@@ -7,7 +7,7 @@
 
 int download_asynchronous(void)
 {
-    std::array<EasyHandle, 3> handles;
+    std::list<EasyHandle> handles(3);
     MultiHandle multi_handle;
 
     /* init easy and multi stacks */
@@ -22,12 +22,10 @@ int download_asynchronous(void)
         return -1;
     }
     /* set options */
-    curl_easy_setopt(handles[0].get(), CURLOPT_URL, "https://curl.haxx.se/libcurl/c/https.html");
-    curl_easy_setopt(handles[1].get(), CURLOPT_URL, "https://curl.haxx.se/libcurl/c/multi-double.html");
-    curl_easy_setopt(handles[2].get(), CURLOPT_URL, "https://curl.haxx.se/libcurl/c/http2-download.html");
     std::for_each(handles.begin(), handles.end(), [](auto& handle) {
+        curl_easy_setopt(handle.get(), CURLOPT_URL, "https://curl.haxx.se/libcurl/c/multi-double.html");
         set_ssl(handle.get());
-        to_memory(handle.get());
+        save_to_file(handle.get());
     });
 
     /* add the individual transfers */
