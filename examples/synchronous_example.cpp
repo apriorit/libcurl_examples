@@ -23,7 +23,7 @@ int download_synchronous(void)
     for (auto& handle : handles)
     {
         /* set options */
-        curl_easy_setopt(handle.get(), CURLOPT_URL, "https://curl.haxx.se/libcurl/c/https.html"); 
+        curl_easy_setopt(handle.get(), CURLOPT_URL, "https://raw.githubusercontent.com/curl/curl/master/docs/examples/https.c"); 
         set_ssl(handle.get()); 
         save_to_file(handle.get()); 
         /* Perform the request, res will get the return code */

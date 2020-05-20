@@ -23,7 +23,7 @@ int download_asynchronous(void)
     }
     /* set options */
     std::for_each(handles.begin(), handles.end(), [](auto& handle) {
-        curl_easy_setopt(handle.get(), CURLOPT_URL, "https://curl.haxx.se/libcurl/c/multi-double.html");
+        curl_easy_setopt(handle.get(), CURLOPT_URL, "https://raw.githubusercontent.com/curl/curl/master/docs/examples/multi-double.c");
         set_ssl(handle.get());
         save_to_file(handle.get());
     });

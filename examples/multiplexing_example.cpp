@@ -35,7 +35,7 @@ int download_multiplexing(void)
 
     for (auto& handle : handles)
     {
-        curl_easy_setopt(handle.get(), CURLOPT_URL, "https://curl.haxx.se/libcurl/c/http2-download.html");
+        curl_easy_setopt(handle.get(), CURLOPT_URL, "https://raw.githubusercontent.com/curl/curl/master/docs/examples/http2-download.c");
         set_ssl(handle.get());
         save_to_file(handle.get());
         /* add the individual transfers */
